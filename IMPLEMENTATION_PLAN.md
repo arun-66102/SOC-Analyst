@@ -1,382 +1,506 @@
-# 🛡️ Agentic AI-Powered Autonomous SOC Analyst — Implementation Plan
+# Agentic AI-Powered Autonomous SOC Analyst — Implementation Plan
 
-> **Project:** Agentic AI-Powered SOC Analyst  
-> **Team Size:** 4 Members  
-> **Methodology:** Agile (Phase-based Delivery)  
-> **Total Phases:** 4 | Progress: **Phase 1 (25%) → Phase 4 (100%)**
+**Scope:** College Final Year Research Prototype
 
----
-
-## 📋 Project Overview
-
-This project proposes an **Agentic AI-powered Autonomous SOC Analyst** that assists security teams in monitoring and investigating cybersecurity incidents. The system ingests security data from SIEM, EDR, IDS/IPS, Firewalls, Cloud Platforms, and Threat Intelligence feeds. Specialized AI agents perform alert triage, log correlation, threat intelligence enrichment, MITRE ATT&CK mapping, investigation, reasoning, and risk assessment. A Memory/Knowledge agent provides historical context, while Recommendation and Report-generation agents produce response suggestions and explainable investigation reports. The final interface is a SOC Dashboard where human analysts review findings and make informed response decisions.
-
----
-
-## 🗺️ Roadmap at a Glance
-
-| Phase | Theme | Progress | Key Deliverables |
-|-------|-------|----------|-----------------|
-| Phase 1 | Foundation & Data Pipeline | 25% | Architecture, data ingestion, environment setup |
-| Phase 2 | Core AI Agent Development | 50% | Triage, correlation, MITRE mapping, threat intel agents |
-| Phase 3 | Advanced Intelligence & Integration | 75% | Memory agent, reasoning engine, risk assessment, API layer |
-| Phase 4 | Dashboard, Reporting & Deployment | 100% | SOC dashboard, report generation, testing, deployment |
+| | |
+|---|---|
+| Project | Agentic AI-Powered SOC Analyst |
+| Team Size | 4 Members |
+| Methodology | Agile (Phase-based Delivery) |
+| Total Phases | 4 |
+| Progress | Phase 1 (25%) to Phase 4 (100%) |
+| Stack | Python, FastAPI, React, Gemini API, Public Datasets, Vercel |
 
 ---
 
-## ⚙️ Phase 1 — Foundation & Data Pipeline
-### Overall Project Completion: **25%**
+## 1. Project Overview
 
-> **Goal:** Establish the system architecture, development environment, and data ingestion pipeline from all major security data sources.
+This project builds an Agentic AI-powered SOC Analyst prototype that autonomously triages security alerts, correlates events, maps threats to the MITRE ATT&CK framework, and generates investigation reports — all without requiring a real enterprise SIEM. Instead, it ingests public cybersecurity datasets (CICIDS2017, UNSW-NB15, MITRE ATT&CK STIX) and simulated log data. Four specialized AI agents (Triage, Correlation, MITRE Mapping, and Report Generation) are powered by the Google Gemini API / OpenAI API, orchestrated by a central controller, and visualized through a React-based SOC Dashboard.
+
+**Academic Framing:** "A Multi-Agent LLM Framework for Autonomous Alert Triage and MITRE ATT&CK Mapping in SOC Environments" — suitable for IEEE / ICACCI paper submission.
 
 ---
 
-### 👤 Member 1 — System Architecture & Core Infrastructure Lead
+## 2. Roadmap at a Glance
+
+| Phase | Theme | Completion | Key Deliverables |
+|---|---|---|---|
+| Phase 1 | Environment, Data & Base Framework | 25% | Project scaffold, datasets, base agent class, synthetic log generator |
+| Phase 2 | Core AI Agents | 50% | Triage Agent, Correlation Agent, MITRE Mapping Agent |
+| Phase 3 | Intelligence Layer & API | 75% | Enrichment Agent, Report Agent, FastAPI backend, agent pipeline |
+| Phase 4 | SOC Dashboard & Submission | 100% | React dashboard, testing, paper, demo video |
+
+---
+
+## 3. Enterprise to College Scope Mapping
+
+| Enterprise Plan (Dropped) | College Prototype (Replaced With) |
+|---|---|
+| Kafka / RabbitMQ streaming | In-memory Python queue / JSON file input |
+| Splunk / CrowdStrike / EDR connectors | Public datasets: CICIDS2017, UNSW-NB15 |
+| Kubernetes + cloud deployment | Vercel (frontend + backend serverless via vercel.json) |
+| Fine-tuned / self-hosted LLM | Gemini 1.5 Flash API or OpenAI GPT-4o API |
+| Neo4j entity knowledge graph | NetworkX + matplotlib graph visualization |
+| SOAR platform integration | Mock playbook recommendations (JSON rules) |
+| HashiCorp Vault secrets manager | Vercel Environment Variables (dashboard secrets) |
+| AWS / Azure / GCP cloud | Vercel free tier (frontend + API) + Neon free PostgreSQL |
+| Elasticsearch + PostgreSQL | Neon free PostgreSQL + FAISS (vector store) |
+| WebSocket real-time streaming | REST API polling (5-second refresh) |
+
+---
+
+## 4. Public Datasets (No Real SIEM Needed)
+
+| Dataset | Use Case | Link |
+|---|---|---|
+| CICIDS 2017 | Network intrusion detection logs | https://www.unb.ca/cic/datasets/ids-2017.html |
+| UNSW-NB15 | Multi-category attack dataset | https://research.unsw.edu.au/projects/unsw-nb15-dataset |
+| MITRE ATT&CK STIX 2.1 | Threat technique mappings | https://github.com/mitre/cti |
+| Elastic Detection Rules | Real-world SIEM alert rules | https://github.com/elastic/detection-rules |
+| Synthetic Log Generator | Built in Phase 1 by Member 4 | Custom script |
+
+---
+
+## 5. Tech Stack (College Edition)
+
+| Category | Tool / Library |
+|---|---|
+| AI / LLM | Google Gemini 1.5 Flash API or OpenAI GPT-4o API |
+| Agent Framework | Custom Python base class |
+| Data Processing | Pandas, NumPy, Scikit-learn |
+| NLP / Embeddings | sentence-transformers, FAISS |
+| Backend API | FastAPI + Uvicorn (serverless on Vercel) |
+| Frontend | React.js + Recharts + Tailwind CSS (deployed on Vercel) |
+| Database | Neon free PostgreSQL + FAISS (vector search) |
+| Graph Visualization | NetworkX + Pyvis |
+| Threat Intel | VirusTotal Free API, AbuseIPDB Free API |
+| Deployment | Vercel (free tier) + vercel.json config |
+| Testing | pytest |
+| Report Generation | ReportLab (PDF) or Jinja2 (HTML) |
+
+---
+
+## 6. Project Folder Structure
+
+```
+SOC-Analyst/
+├── agents/
+│   ├── base_agent.py
+│   ├── triage_agent.py
+│   ├── correlation_agent.py
+│   ├── mitre_agent.py
+│   ├── enrichment_agent.py
+│   ├── report_agent.py
+│   └── orchestrator.py
+├── ingestion/
+│   ├── dataset_loader.py
+│   ├── normalizer.py
+│   └── log_generator.py
+├── data/
+│   ├── cicids2017/
+│   ├── unsw_nb15/
+│   ├── mitre_stix/
+│   └── processed/
+├── api/
+│   ├── main.py
+│   ├── routes/
+│   │   ├── alerts.py
+│   │   ├── agents.py
+│   │   └── reports.py
+│   └── models.py
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── App.jsx
+│   └── package.json
+├── database/
+│   ├── db.py            # Neon PostgreSQL connection (psycopg2)
+│   └── schema.sql
+├── tests/
+│   ├── test_triage.py
+│   ├── test_correlation.py
+│   └── test_mitre.py
+├── notebooks/
+├── paper/
+├── vercel.json            # Vercel deployment config (routes frontend + backend)
+├── requirements.txt
+├── .env.example            # All API keys documented (set as Vercel Env Vars in prod)
+└── README.md
+```
+
+---
+
+## 7. Phase 1 — Environment, Data & Base Framework
+
+**Overall Project Completion: 25%**
+
+Goal: Set up the project, load and normalize public datasets, build the base agent class, and create the synthetic log generator.
+
+### 7.1 Member 1 — Project Lead & Base Agent Framework
 
 **Responsibilities:**
-- Design the **overall system architecture** including microservices layout, agent communication protocols, and data flow diagrams
-- Set up the **central data ingestion engine** capable of collecting logs from SIEM (Splunk/Elastic), EDR (CrowdStrike/SentinelOne), IDS/IPS, and Firewalls
-- Implement **data normalization and preprocessing pipelines** — converting raw logs into a unified schema (CEF/LEEF/ECS format)
-- Configure **Kafka or RabbitMQ** as the message broker for real-time event streaming between agents
-- Build the **base agent framework** (abstract agent class, message bus interface, inter-agent communication layer)
-- Set up **PostgreSQL/Elasticsearch** databases for log storage and structured querying
-- Define and document **API contracts** (REST/gRPC) for all internal service communication
+- Scaffold the full project directory structure
+- Write the abstract BaseAgent class — defines `process()`, `health_check()`, and `log()` methods
+- Define the NormalizedEvent Pydantic schema — unified log format all agents share
+- Write the `orchestrator.py` skeleton — routes events to agents
+- Set up Neon free PostgreSQL database — create project at neon.tech, copy the connection string into `.env`
+- Configure `.env` / `.env.example` for API keys (Groq / VirusTotal / AbuseIPDB / Neon DB URL)
+- Write `vercel.json` to route `/api/*` to FastAPI and `/*` to the React frontend
+- Build `agents/llm_client.py` — unified Groq Cloud client with task-specific model selection
 
 **Deliverables:**
-- [ ] System architecture diagram (draw.io / Mermaid)
-- [ ] Dockerized data ingestion microservice
-- [ ] Base agent communication framework
-- [ ] Unified log schema and normalization module
-- [ ] Database schema definitions
-- [ ] API specification document (OpenAPI 3.0)
+- [x] Full project folder scaffold
+- [x] `base_agent.py` — abstract agent class
+- [x] NormalizedEvent Pydantic schema (`api/models.py`)
+- [x] Neon PostgreSQL schema and `db.py` connection module (psycopg2 / asyncpg)
+- [x] `vercel.json` — Vercel routing configuration
+- [x] `.env.example` with all required keys documented
+- [x] `agents/llm_client.py` — Groq Cloud client with `GroqTask` enum (task-specific models)
+- [x] `requirements.txt` — all Python dependencies
+- [x] `orchestrator.py` — full pipeline skeleton (5 agent slots)
+- [x] All agent placeholder stubs (`triage`, `correlation`, `mitre`, `enrichment`, `report`)
 
----
-
-### 👤 Member 2 — Cloud & Threat Intelligence Data Source Integration
+### 7.2 Member 2 — Dataset Loading & Normalization Pipeline
 
 **Responsibilities:**
-- Integrate **Cloud platform telemetry** — AWS CloudTrail, Azure Monitor, GCP Audit Logs via their respective SDKs/APIs
-- Build connectors for **threat intelligence platforms** — VirusTotal API, MISP, AbuseIPDB, Shodan, and AlienVault OTX
-- Implement **rate limiting, retry logic, and API key management** for external threat intel queries
-- Set up **CI/CD pipelines** (GitHub Actions / GitLab CI) with automated linting, testing, and Docker image builds
-- Containerize all data-source connectors using Docker and create `docker-compose.yml` for local development
+- Download CICIDS 2017 and UNSW-NB15 datasets and store in `data/`
+- Write `dataset_loader.py` to load CSV files using Pandas
+- Write `normalizer.py` to convert raw dataset rows into NormalizedEvent schema
+- Download and parse MITRE ATT&CK STIX 2.1 JSON files — extract technique IDs, names, descriptions, and tactics into `techniques.json`
+- Write a Jupyter notebook for exploratory data analysis (EDA)
 
 **Deliverables:**
-- [ ] Cloud platform data connectors (AWS, Azure, GCP)
-- [ ] Threat intelligence API integration modules
-- [ ] CI/CD pipeline configuration files
-- [ ] Docker Compose environment for local dev
-- [ ] Integration test suite for all data connectors
+- [ ] `dataset_loader.py` — loads CICIDS2017 + UNSW-NB15 CSVs
+- [ ] `normalizer.py` — maps raw columns to NormalizedEvent
+- [ ] `data/mitre_stix/techniques.json` — parsed ATT&CK technique lookup table
+- [ ] `notebooks/eda.ipynb` — EDA notebook with charts
 
----
-
-### 👤 Member 3 — Data Quality, Security & Documentation
+### 7.3 Member 3 — Vercel Setup & API Skeleton
 
 **Responsibilities:**
-- Implement **data validation and quality checks** — schema enforcement, duplicate detection, and data freshness monitoring
-- Configure **TLS/mTLS encryption** for all inter-service communication
-- Set up **role-based access control (RBAC)** and secrets management using HashiCorp Vault or AWS Secrets Manager
-- Write **developer onboarding documentation**, environment setup guides, and contribution guidelines
-- Create and maintain the **project wiki** with architecture decisions (ADRs)
+- Write `vercel.json` to route all `/api/*` requests to FastAPI serverless functions and `/*` to the React frontend
+- Write `api/main.py` — FastAPI app with CORS, health-check endpoint, and route registration
+- Define all Pydantic request/response models for the API
+- Set up FAISS as the vector store for semantic alert similarity search
+- Connect FastAPI to Neon PostgreSQL using psycopg2 / asyncpg
+- Write `requirements.txt` with all Python dependencies
+- Set up local dev script (`run_dev.sh` / `run_dev.bat`) that starts FastAPI + React locally without Docker
+
+**vercel.json Structure:**
+
+```json
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/main.py", "use": "@vercel/python" },
+    { "src": "frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/main.py" },
+    { "src": "/(.*)", "dest": "frontend/dist/$1" }
+  ]
+}
+```
 
 **Deliverables:**
-- [ ] Data validation middleware
-- [ ] RBAC and secrets management setup
-- [ ] Developer documentation and setup guide
-- [ ] Architecture Decision Records (ADRs)
-- [ ] Security hardening checklist
+- [ ] `vercel.json` — complete Vercel routing configuration
+- [ ] `api/main.py` — FastAPI skeleton with `/health` endpoint
+- [ ] `api/models.py` — all Pydantic schemas
+- [ ] FAISS index initialization script
+- [ ] `requirements.txt`
+- [ ] `run_dev.bat` / `run_dev.sh` — local dev startup script (no Docker needed)
 
----
-
-### 👤 Member 4 — Testing Infrastructure & Environment Setup
+### 7.4 Member 4 — Synthetic Log Generator & Testing Setup
 
 **Responsibilities:**
-- Set up **unit testing frameworks** (pytest / Jest) across all modules
-- Create **synthetic security log generators** to simulate SIEM alerts, EDR events, and IDS alerts for testing
-- Configure **logging and basic monitoring** using the ELK Stack or Grafana/Loki
-- Maintain **project board** (Jira/GitHub Projects) and sprint backlog for Phase 1
+- Build `ingestion/log_generator.py` — generates realistic fake security events (brute-force, port scan, data exfiltration, malware C2) as NormalizedEvent JSON
+- Configure pytest with fixtures and sample test data
+- Write sample unit tests for the normalizer and loader modules
+- Set up GitHub repository with `.gitignore`, branch strategy, and README
 
 **Deliverables:**
-- [ ] Unit test setup and sample test cases
-- [ ] Synthetic log data generator scripts
-- [ ] Basic observability stack configuration
-- [ ] Sprint 1 board and task tracking setup
+- [ ] `log_generator.py` — generates 1000+ synthetic events across 10+ attack types
+- [ ] `tests/` — pytest setup + 3 sample test cases
+- [ ] GitHub repo with README, `.gitignore`, and branch strategy documented
 
 ---
 
-## ⚙️ Phase 2 — Core AI Agent Development
-### Overall Project Completion: **50%**
+## 8. Phase 2 — Core AI Agents
 
-> **Goal:** Build and validate the core AI agents responsible for alert triage, log correlation, MITRE ATT&CK mapping, and threat intelligence enrichment.
+**Overall Project Completion: 50%**
 
----
+Goal: Build and test the three core AI agents: Alert Triage, Log Correlation, and MITRE ATT&CK Mapping.
 
-### 👤 Member 1 — Alert Triage Agent & Log Correlation Engine (Lead)
+### 8.1 Member 1 — Alert Triage Agent
+
+**What it does:** Classifies each incoming security event as Critical / High / Medium / Low severity and decides if it is a true positive or likely false positive.
+
+**How it works:**
+- Takes a NormalizedEvent as input
+- Sends structured prompt to Gemini API with event details and few-shot examples
+- Returns severity level, confidence score, and reasoning text
+- Saves result to Neon PostgreSQL
+
+**Prompt Strategy:** "You are a SOC analyst. Analyze the following security event and classify it. Event: {event details}. Classify severity as Critical / High / Medium / Low. Is this a True Positive or False Positive? Explain your reasoning in 2-3 sentences."
+
+**Deliverables:**
+- [ ] `agents/triage_agent.py` — full triage agent implementation
+- [ ] Prompt templates in `agents/prompts/triage_prompts.py`
+- [ ] `tests/test_triage.py` — unit tests with 5 labeled events
+- [ ] Accuracy report: tested on 100 labeled CICIDS2017 events
+
+### 8.2 Member 2 — Log Correlation Engine
+
+**What it does:** Groups multiple related security events into a single incident by detecting temporal patterns and semantic similarity.
+
+**How it works:**
+- Sliding time-window algorithm: groups events within a configurable window (e.g. 5 min) from the same source IP
+- Uses sentence-transformers embeddings stored in a FAISS index to find semantically similar past alerts
+- Assigns a unique `incident_id` to correlated event groups
+- Asks Gemini to write a one-paragraph summary of the correlated incident
+
+**Deliverables:**
+- [ ] `agents/correlation_agent.py` — time-window + semantic correlation
+- [ ] FAISS index + embedding pipeline for alert similarity
+- [ ] `tests/test_correlation.py` — unit tests
+- [ ] Correlation report: tested on CICIDS2017 multi-step attack scenarios
+
+### 8.3 Member 3 — MITRE ATT&CK Mapping Agent
+
+**What it does:** Maps each security event or incident to one or more MITRE ATT&CK techniques (e.g. T1110 Brute Force, T1046 Network Service Discovery).
+
+**How it works:**
+- Uses the parsed `techniques.json` from Phase 1
+- Embeds technique descriptions using sentence-transformers
+- Computes cosine similarity between event description and all technique embeddings
+- Returns the top 3 matching techniques with confidence scores
+- Optionally asks Gemini to confirm / refine the mapping with reasoning
+
+**Deliverables:**
+- [ ] `agents/mitre_agent.py` — embedding-based + LLM-confirmed MITRE mapping
+- [ ] Pre-computed embeddings for all 700+ ATT&CK techniques stored in a FAISS flat index
+- [ ] `tests/test_mitre.py` — unit tests with known attack-technique pairs
+- [ ] Precision/recall evaluation on 50 labeled test cases
+
+### 8.4 Member 4 — Agent Evaluation & Visualization Prototype
 
 **Responsibilities:**
-- Design and implement the **Alert Triage Agent** using an LLM (GPT-4 / Gemini / local LLaMA) with structured prompting and few-shot examples
-- Build the **multi-source Log Correlation Engine** — correlating events across SIEM, EDR, and IDS/IPS using temporal and semantic correlation techniques
-- Implement **alert deduplication and clustering algorithms** to group related alerts into incidents
-- Develop the **MITRE ATT&CK Mapping Agent** — using NLP to map observed TTPs to ATT&CK techniques and sub-techniques via the MITRE ATT&CK STIX dataset
-- Integrate **ATT&CK Navigator layer export** for visual kill-chain mapping
-- Build the **Threat Intelligence Enrichment Agent** — auto-enriching IPs, domains, hashes, and CVEs using threat intel APIs from Phase 1
-- Implement a **severity scoring system** combining CVSS scores, asset criticality, and threat intel confidence
+- Build a simple Streamlit prototype to visualize triage, correlation, and MITRE mapping outputs during development
+- Design the evaluation dataset — label 200 events from CICIDS2017 with correct severity and ATT&CK technique
+- Run accuracy benchmarks for all 3 agents and document results in a table
+- Maintain sprint documentation and update README with Phase 2 architecture
 
 **Deliverables:**
-- [ ] Alert Triage Agent (with LLM backbone and prompt templates)
-- [ ] Log Correlation Engine
-- [ ] Alert deduplication and clustering module
-- [ ] MITRE ATT&CK Mapping Agent
-- [ ] ATT&CK Navigator layer export
-- [ ] Threat Intelligence Enrichment Agent
-- [ ] Severity scoring module
+- [ ] Streamlit dev visualization tool
+- [ ] 200-event labeled evaluation dataset (`data/eval_dataset.csv`)
+- [ ] Benchmark results table (accuracy, precision, recall for each agent)
+- [ ] Updated README and Phase 2 wiki notes
 
 ---
 
-### 👤 Member 2 — Agent Orchestration & LLM Pipeline
+## 9. Phase 3 — Intelligence Layer & API
+
+**Overall Project Completion: 75%**
+
+Goal: Add threat enrichment, investigation reasoning, report generation, and expose the full agent pipeline through a FastAPI REST API.
+
+### 9.1 Member 1 — Threat Intelligence Enrichment Agent & Reasoning
+
+**Enrichment Agent:**
+- Takes IPs, domains, and file hashes from a NormalizedEvent
+- Queries VirusTotal Free API and AbuseIPDB Free API for threat reputation data
+- Returns enriched event with `is_malicious`, `confidence`, and `threat_labels` fields
+- Implements rate limiting (VirusTotal free = 4 requests/min)
+
+**Investigation Reasoning:**
+- Takes the full correlated incident (triage + MITRE mapping + enrichment data)
+- Sends to Gemini with a Chain-of-Thought prompt asking it to reason step-by-step
+- Generates a structured investigation narrative
+
+**Deliverables:**
+- [ ] `agents/enrichment_agent.py` — VirusTotal + AbuseIPDB integration
+- [ ] Rate limiter and retry logic for API calls
+- [ ] Chain-of-Thought investigation reasoning prompt + output parser
+- [ ] `tests/test_enrichment.py`
+
+### 9.2 Member 2 — Agent Orchestrator & FastAPI Backend
+
+**Orchestrator:** Runs the full pipeline: Load Event → Triage Agent → Correlation Agent → MITRE Agent → Enrichment Agent → Report Agent
+
+**FastAPI Endpoints:**
+- `GET /api/alerts` — list all normalized events
+- `GET /api/alerts/{id}` — get single alert with all agent outputs
+- `POST /api/analyze` — trigger full agent pipeline on a new event
+- `GET /api/incidents` — list correlated incidents
+- `GET /api/reports/{incident_id}` — get investigation report
+- `GET /api/stats` — dashboard summary stats
+
+**Deliverables:**
+- [ ] `agents/orchestrator.py` — full end-to-end pipeline
+- [ ] All FastAPI routes implemented and tested
+- [ ] Swagger UI auto-documentation at `/docs`
+- [ ] Postman collection for all endpoints
+
+### 9.3 Member 3 — Report Generation Agent
+
+**Report Sections:**
+1. Executive Summary (non-technical, business impact)
+2. Technical Analysis (event timeline, attack chain)
+3. ATT&CK Techniques Identified
+4. Indicators of Compromise (IOCs) — IPs, hashes, domains
+5. Risk Score (calculated from severity + enrichment confidence)
+6. Recommended Response Actions (mock playbook suggestions)
+
+**Deliverables:**
+- [ ] `agents/report_agent.py`
+- [ ] Jinja2 HTML report template (`templates/report.html`)
+- [ ] PDF export using ReportLab or WeasyPrint
+- [ ] Sample report generated from CICIDS2017 test incident
+
+### 9.4 Member 4 — Testing, Performance & Phase 4 Planning
 
 **Responsibilities:**
-- Implement the **Agent Orchestrator** — the central controller that routes security events to the appropriate agents, manages agent lifecycle, and handles agent failures
-- Build the **LLM abstraction layer** to support swappable LLM backends (OpenAI, Anthropic, Google Gemini, local Ollama)
-- Implement **prompt chaining and structured output parsing** using LangChain or LlamaIndex
-- Develop **token budget management** and context window handling for LLM calls
-- Set up **vector database** (Pinecone / ChromaDB / Weaviate) for semantic similarity search on past alerts
+- Write integration tests that run the full pipeline end-to-end on 10 test events
+- Measure and document pipeline latency per agent (average response time per event)
+- Define acceptance criteria for the SOC dashboard (Phase 4)
+- Prepare the research paper outline
 
 **Deliverables:**
-- [ ] Agent orchestrator service
-- [ ] LLM abstraction and routing layer
-- [ ] LangChain / LlamaIndex integration
-- [ ] Vector database setup and embedding pipeline
-- [ ] Agent health monitoring and failover logic
+- [ ] End-to-end integration test suite (`tests/test_pipeline.py`)
+- [ ] Pipeline latency benchmark report
+- [ ] Phase 4 dashboard wireframes
+- [ ] Research paper outline (1-2 pages)
 
 ---
 
-### 👤 Member 3 — Agent Testing, Evaluation & Benchmarking
+## 10. Phase 4 — SOC Dashboard & Submission
+
+**Overall Project Completion: 100%**
+
+Goal: Build the React SOC Dashboard, finalize testing, write the research paper, and prepare the demo.
+
+### 10.1 Member 1 — SOC Dashboard Lead (React Frontend)
+
+**Dashboard Pages:**
+1. Overview Page — live alert feed, severity pie chart, active incidents count
+2. Alert Detail Page — single alert with triage result, MITRE tags, enrichment data, reasoning narrative
+3. Incidents Page — list of correlated incidents with timeline view
+4. MITRE ATT&CK Page — heatmap showing which techniques were detected
+5. Reports Page — download generated PDF/HTML investigation reports
+6. Analyst Action Panel — Approve / Escalate / Dismiss alert with comment
+
+**Tech:** React + Recharts + Tailwind CSS + Axios
+
+**Deliverables:**
+- [ ] React dashboard with all 5 pages
+- [ ] Real-time polling from FastAPI (5-sec refresh on alert feed)
+- [ ] Severity color-coded alert cards (Critical=Red, High=Orange, Medium=Yellow, Low=Green)
+- [ ] MITRE ATT&CK heatmap grid
+- [ ] Report download button
+- [ ] Analyst approve/dismiss action with comment saved to DB
+
+### 10.2 Member 2 — Full System Testing & Vercel Deployment
 
 **Responsibilities:**
-- Design **evaluation datasets** with labeled security events (TP, FP, TN, FN) for agent accuracy measurement
-- Implement **automated evaluation pipelines** that benchmark triage accuracy, correlation quality, and MITRE mapping precision/recall
-- Write **integration tests** for all agents from Phase 2 and test inter-agent communication
-- Document all **agent prompt templates** and maintain a prompt library with version control
+- Run full QA test pass across all agents and dashboard
+- Deploy the React frontend to Vercel — connect GitHub repo, set environment variables in Vercel dashboard
+- Deploy the FastAPI backend as Vercel serverless functions via `vercel.json`
+- Verify all environment variables are set correctly in Vercel dashboard (Gemini key, Neon DB URL, VirusTotal key, AbuseIPDB key)
+- Fix all integration bugs found during QA
+- Write the user manual — how to set up and run the system locally and how to deploy to Vercel
+
+**Vercel Deployment Steps:**
+1. Push code to GitHub
+2. Go to vercel.com → Import Project → Select GitHub repo
+3. Add all environment variables from `.env.example` in Vercel dashboard
+4. Vercel auto-detects `vercel.json` and builds frontend + backend
+5. Get live public URL — share it in the paper and demo video
 
 **Deliverables:**
-- [ ] Labeled security event evaluation dataset
-- [ ] Agent evaluation and benchmarking pipeline
-- [ ] Integration test suite for all Phase 2 agents
-- [ ] Prompt template library and documentation
+- [ ] Live Vercel deployment URL (e.g. soc-analyst.vercel.app)
+- [ ] All environment variables configured in Vercel dashboard
+- [ ] QA test report (all endpoints, all agents, all dashboard pages)
+- [ ] Bug fix log
+- [ ] `SETUP.md` — local dev guide + Vercel deployment guide
 
----
+### 10.3 Member 3 — Research Paper Writing
 
-### 👤 Member 4 — Data Visualization Prototype & Feedback Loop
+**Paper Title (Suggested):** MAS-SOC: A Multi-Agent LLM System for Autonomous Alert Triage and MITRE ATT&CK Mapping in Security Operations
+
+**Paper Sections:**
+1. Abstract
+2. Introduction — problem statement, SOC analyst workload challenge
+3. Related Work — existing SIEM tools, AI in cybersecurity, LLM agents
+4. System Architecture — agent design, pipeline diagram, data flow
+5. Methodology — dataset, agent prompts, evaluation setup
+6. Results — accuracy tables, MITRE mapping precision/recall, latency
+7. Conclusion and Future Work
+
+**Target Venues:** IEEE ICACCI, ICCCS, or Computers & Security journal
+
+**Deliverables:**
+- [ ] Full paper draft (6-8 pages, IEEE format)
+- [ ] Architecture diagram (draw.io / Mermaid)
+- [ ] Results tables and charts from Phase 2 and Phase 3 benchmarks
+- [ ] Submission-ready PDF
+
+### 10.4 Member 4 — Demo Video & Presentation
 
 **Responsibilities:**
-- Build a **minimal internal dashboard prototype** (simple web UI or Streamlit) to visualize agent outputs during development
-- Implement **feedback logging** — capturing analyst corrections to agent outputs for future fine-tuning
-- Maintain sprint documentation, conduct **retrospective notes**, and update the project wiki with Phase 2 architecture changes
+- Record a 5-minute demo video showing:
+  1. Ingesting a synthetic attack scenario
+  2. Triage Agent classifying the alert
+  3. MITRE Mapping Agent tagging techniques
+  4. Investigation Report being generated
+  5. SOC Dashboard displaying everything
+- Prepare a 15-slide presentation deck for college evaluation
+- Coordinate team demo rehearsal
 
 **Deliverables:**
-- [ ] Prototype visualization UI (Streamlit or simple React app)
-- [ ] Analyst feedback logging module
-- [ ] Phase 2 wiki and retrospective documentation
+- [ ] 5-minute demo video (MP4)
+- [ ] 15-slide presentation (PowerPoint / Google Slides)
+- [ ] Live demo script and Q&A preparation notes
 
 ---
 
-## ⚙️ Phase 3 — Advanced Intelligence & Integration
-### Overall Project Completion: **75%**
+## 11. Revised Key Milestones
 
-> **Goal:** Add memory, reasoning, and risk assessment capabilities, and expose a unified API layer for the SOC dashboard.
-
----
-
-### 👤 Member 1 — Memory Agent, Reasoning Engine & Risk Assessment (Lead)
-
-**Responsibilities:**
-- Build the **Memory / Knowledge Agent** — a persistent context store combining:
-  - **Short-term memory:** Redis-backed working memory for current investigation context
-  - **Long-term memory:** Vector DB embeddings of past incidents, analyst decisions, and threat reports
-  - **Entity graph:** Neo4j or NetworkX-based knowledge graph of assets, users, indicators, and their relationships
-- Develop the **Investigation & Reasoning Agent** — a multi-step reasoning pipeline (ReAct / Chain-of-Thought) that generates step-by-step investigation narratives explaining the attack chain
-- Implement the **Risk Assessment Agent** — computing dynamic risk scores using asset criticality, blast radius estimation, lateral movement detection, and business impact scoring
-- Design and implement the **Recommendation Agent** — suggesting SOAR playbook executions, firewall rule changes, and IR actions based on investigation conclusions
-- Build the **full agent pipeline** end-to-end: Ingest → Triage → Correlate → Enrich → Map → Reason → Risk Score → Recommend
-
-**Deliverables:**
-- [ ] Memory / Knowledge Agent (short-term + long-term + entity graph)
-- [ ] Investigation & Reasoning Agent (Chain-of-Thought pipeline)
-- [ ] Risk Assessment Agent
-- [ ] Recommendation Agent with playbook mapping
-- [ ] End-to-end agent pipeline integration test
+| Milestone | Phase | What It Means |
+|---|---|---|
+| Datasets loaded + Base agent working | Phase 1 | Data pipeline ready |
+| 3 core agents functional | Phase 2 | Core AI working |
+| Full pipeline via API | Phase 3 | End-to-end operational |
+| Dashboard live + Paper submitted | Phase 4 | Project complete |
 
 ---
 
-### 👤 Member 2 — REST API Layer & Backend Services
+## 12. Evaluation Metrics (For Paper)
 
-**Responsibilities:**
-- Design and implement the **unified REST API** (FastAPI / Express.js) exposing all agent capabilities to the SOC dashboard
-- Implement **WebSocket endpoints** for real-time alert streaming and live investigation updates to the dashboard
-- Build **authentication and authorization middleware** — JWT-based auth with RBAC for analyst, manager, and admin roles
-- Implement **API rate limiting, request throttling**, and response caching (Redis)
-- Write comprehensive **API documentation** (Swagger UI / Redoc)
-
-**Deliverables:**
-- [ ] Full REST API with all endpoints
-- [ ] WebSocket real-time streaming service
-- [ ] JWT authentication and RBAC middleware
-- [ ] Redis caching layer
-- [ ] Swagger/OpenAPI documentation
+| Agent | Metric | Target |
+|---|---|---|
+| Triage Agent | Accuracy (vs. labeled dataset) | > 85% |
+| Correlation Agent | Incident grouping F1-score | > 80% |
+| MITRE Mapping Agent | Top-3 Precision | > 75% |
+| Enrichment Agent | API success rate | > 95% |
+| Full Pipeline | Avg. latency per event | < 10 seconds |
 
 ---
 
-### 👤 Member 3 — SOAR Integration & External Playbook Connectors
+## 13. Important Notes
 
-**Responsibilities:**
-- Integrate with **SOAR platforms** (Palo Alto XSOAR / IBM Resilient / Shuffle) for automated playbook execution
-- Build connectors for **ticketing systems** — Jira, ServiceNow, PagerDuty — for automatic incident ticket creation
-- Implement **notification and alerting pipelines** (Slack, Microsoft Teams, email) for critical incidents
-- Conduct **security penetration testing** on the API layer and document findings
+**API Costs:** Gemini 1.5 Flash API has a free tier (15 requests/min, 1M tokens/day) — sufficient for prototyping. Only pay if you exceed free limits.
 
-**Deliverables:**
-- [ ] SOAR platform connectors
-- [ ] Ticketing system integration (Jira / ServiceNow)
-- [ ] Notification pipeline (Slack / Teams / email)
-- [ ] API security test report
+**Database:** Neon PostgreSQL free tier gives 0.5 GB storage plus 190 compute hours/month — more than enough for this prototype. Sign up free at neon.tech.
 
----
+**Vercel Free Tier Limits:** 100GB bandwidth/month, unlimited deployments, 12 serverless function regions — all free. No credit card needed for hobby plan.
 
-### 👤 Member 4 — Performance Testing & Scalability Validation
+**Vercel + FastAPI Note:** Vercel Python runtime supports FastAPI via ASGI. Each API route runs as a serverless function — cold starts may add 1-2 seconds on first call, which is acceptable for a prototype.
 
-**Responsibilities:**
-- Conduct **load testing** of the entire pipeline using Locust or k6 — simulate high-volume alert ingestion scenarios
-- Profile **agent latency and throughput** bottlenecks and document optimization recommendations
-- Update **user stories, acceptance criteria**, and prepare Phase 4 planning artifacts
-- Maintain project board and Phase 3 documentation
+**Dataset Size:** Use a 5,000-event subset of CICIDS2017 for development. Do not load all 2M+ rows into memory — sample strategically.
 
-**Deliverables:**
-- [ ] Load test reports with benchmark results
-- [ ] Agent performance profiling report
-- [ ] Phase 4 planning documentation
-- [ ] Updated user stories and acceptance criteria
+**Scope Boundary:** This is a research prototype. Clearly state in the paper that it is not production-ready and requires real SIEM integration for enterprise deployment. This is academically expected and acceptable.
 
 ---
 
-## ⚙️ Phase 4 — SOC Dashboard, Reporting & Deployment
-### Overall Project Completion: **100%**
-
-> **Goal:** Deliver the production-ready SOC Dashboard, explainable investigation reports, end-to-end testing, and full deployment to cloud infrastructure.
-
----
-
-### 👤 Member 1 — SOC Dashboard Development & Report Generation (Lead)
-
-**Responsibilities:**
-- Design and build the **full SOC Analyst Dashboard** (React.js / Next.js) featuring:
-  - **Real-time alert feed** with severity color coding and agent confidence scores
-  - **Interactive investigation timeline** showing the step-by-step attack chain
-  - **MITRE ATT&CK heatmap** visualization (ATT&CK Navigator embedded)
-  - **Asset and entity graph viewer** using D3.js or Cytoscape.js
-  - **Risk dashboard** with live risk score gauges and trend charts (Recharts / Chart.js)
-  - **Analyst action panel** — approve/reject/escalate agent recommendations
-  - **Playbook execution tracker** showing SOAR workflow status
-- Build the **Report Generation Agent** — producing structured, explainable PDF/HTML investigation reports with:
-  - Executive summary with business impact
-  - Technical deep-dive with evidence chain
-  - MITRE ATT&CK mapping visualization
-  - Recommended remediation actions with priority ranking
-  - IOC (Indicator of Compromise) lists for threat hunting
-- Implement **human-in-the-loop feedback mechanism** — analysts can correct agent outputs, approve recommendations, and annotate findings directly from the dashboard
-- Conduct **full end-to-end system testing** across all 4 phases
-
-**Deliverables:**
-- [ ] Production-ready SOC Dashboard (React / Next.js)
-- [ ] Real-time alert feed with WebSocket integration
-- [ ] MITRE ATT&CK heatmap and entity graph visualizations
-- [ ] Risk dashboard with live metrics
-- [ ] Investigation report generation (PDF/HTML)
-- [ ] Human-in-the-loop correction and feedback UI
-- [ ] End-to-end system integration tests
-
----
-
-### 👤 Member 2 — Cloud Deployment & DevOps
-
-**Responsibilities:**
-- Deploy the full system to **AWS / Azure / GCP** using Kubernetes (EKS / AKS / GKE) with Helm charts
-- Implement **auto-scaling policies** for agent pods based on alert queue depth
-- Set up **production monitoring and alerting** using Prometheus + Grafana with custom SOC pipeline dashboards
-- Configure **centralized logging** (ELK Stack / Loki) with log retention policies
-- Implement **disaster recovery and backup strategies** — daily database snapshots, multi-zone redundancy
-- Conduct **final security audit** — penetration testing, dependency scanning (Snyk / Trivy), and vulnerability patching
-
-**Deliverables:**
-- [ ] Kubernetes cluster and Helm chart deployment
-- [ ] Auto-scaling configuration
-- [ ] Prometheus + Grafana production dashboards
-- [ ] Centralized logging with retention policies
-- [ ] Disaster recovery runbook
-- [ ] Final security audit report
-
----
-
-### 👤 Member 3 — Final Testing, QA & Documentation
-
-**Responsibilities:**
-- Execute **full-scale QA testing** — functional, regression, UAT (User Acceptance Testing) with simulated SOC scenarios
-- Write the **final project report and thesis documentation** covering system design, methodology, agent architectures, evaluation results, and future work
-- Prepare **demo scripts and video walkthroughs** showcasing the system's capabilities for stakeholder presentations
-- Compile the **user manual** and SOC analyst guide for operating the dashboard
-
-**Deliverables:**
-- [ ] QA test report (functional + regression + UAT)
-- [ ] Final project report / thesis document
-- [ ] Demo video and presentation slides
-- [ ] User manual and SOC analyst operating guide
-
----
-
-### 👤 Member 4 — Model Fine-tuning & Future Roadmap
-
-**Responsibilities:**
-- Fine-tune or **align the LLM** using analyst feedback data collected across all phases (RLHF / DPO / supervised fine-tuning on cybersecurity datasets)
-- Evaluate **model performance improvements** post fine-tuning with benchmarking against Phase 2 baselines
-- Document the **future roadmap** — planned improvements, open research questions, and potential production enhancements
-- Prepare **final project presentation** slides and coordinate team rehearsal
-
-**Deliverables:**
-- [ ] Fine-tuned model checkpoint and evaluation report
-- [ ] Performance comparison report (pre vs. post fine-tuning)
-- [ ] Future roadmap and research directions document
-- [ ] Final presentation slides
-
----
-
-## 📊 Technology Stack Summary
-
-| Category | Technologies |
-|----------|-------------|
-| **AI / LLM** | GPT-4 / Gemini / LLaMA, LangChain, LlamaIndex |
-| **Data Ingestion** | Apache Kafka, Logstash, custom connectors |
-| **Storage** | Elasticsearch, PostgreSQL, Redis, Neo4j, ChromaDB |
-| **Backend** | FastAPI (Python), WebSocket, REST APIs |
-| **Frontend** | React.js / Next.js, D3.js, Cytoscape.js, Recharts |
-| **Threat Intel** | VirusTotal, MISP, AbuseIPDB, AlienVault OTX |
-| **MITRE ATT&CK** | STIX dataset, ATT&CK Navigator |
-| **DevOps** | Docker, Kubernetes, Helm, GitHub Actions |
-| **Cloud** | AWS / Azure / GCP |
-| **Monitoring** | Prometheus, Grafana, ELK Stack |
-| **Security** | HashiCorp Vault, JWT, mTLS, Snyk |
-
----
-
-## 🎯 Key Milestones
-
-| Milestone | Phase | Target |
-|-----------|-------|--------|
-| Data Pipeline Operational | Phase 1 | End of Phase 1 |
-| All Core Agents Functional | Phase 2 | End of Phase 2 |
-| Full API + Memory Agent Live | Phase 3 | End of Phase 3 |
-| Production Deployment | Phase 4 | End of Phase 4 |
-| Thesis / Final Report Complete | Phase 4 | End of Phase 4 |
-
----
-
-> *This implementation plan is a living document and should be updated at the end of each phase to reflect progress, blockers, and any scope adjustments.*
+*This is a living document. Update at the end of each phase to reflect progress, blockers, and scope adjustments.*
