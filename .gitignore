@@ -53,6 +53,7 @@ venv.bak/
 data/cicids2017/*.csv
 data/unsw_nb15/*.csv
 data/unsw_nb15/*.arff
+data/mitre_stix/enterprise-attack.json
 data/processed/*.bin
 data/processed/*.index
 
