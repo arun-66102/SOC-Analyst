@@ -429,3 +429,44 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 _Autonomous threat detection, investigation, and response — powered by LLMs._
 
 </div>
+
+> ⚠️ **Important:** Read the dataset setup section below before running any code.
+
+## Dataset Setup (Required — Not Included in Repo)
+
+The raw datasets are too large for Git and are excluded via `.gitignore`.
+Each team member must download them manually and place them in the exact
+folder structure below before running any ingestion code.
+
+### 1. CICIDS2017
+- Download: https://www.unb.ca/cic/datasets/ids-2017.html
+- Get the `MachineLearningCVE` folder (8 CSV files)
+- Place at: `data/cicids2017/MachineLearningCVE/`
+
+### 2. UNSW-NB15
+- Download: https://research.unsw.edu.au/projects/unsw-nb15-dataset
+- Get `UNSW_NB15_training-set.csv` and `UNSW_NB15_testing-set.csv`
+  (the processed/Kaggle-style version)
+- Place at: `data/unsw_nb15/`
+
+### 3. MITRE ATT&CK STIX Bundle (optional)
+- Download: https://github.com/mitre/cti → `enterprise-attack/enterprise-attack.json`
+- Place at: `data/mitre_stix/enterprise-attack.json`
+- **Note:** You only need this if you're re-running `ingestion/mitre_parser.py`
+  yourself. The parsed output (`data/mitre_stix/techniques.json`) is already
+  committed to the repo and ready to use.
+
+### Folder structure after setup
+
+```
+data/
+├── cicids2017/
+│   └── MachineLearningCVE/
+│       └── *.csv (8 files)
+├── unsw_nb15/
+│   ├── UNSW_NB15_training-set.csv
+│   └── UNSW_NB15_testing-set.csv
+└── mitre_stix/
+    ├── enterprise-attack.json   (optional, for re-parsing)
+    └── techniques.json          (already in repo)
+```
