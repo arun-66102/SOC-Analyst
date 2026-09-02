@@ -128,6 +128,10 @@ def normalize_cicids2017_row(row):
     """
 
     label = get_val(row, "Label")
+    protocol_raw = get_val(row, "Protocol")
+    # Protocol in CICIDS2017 is stored as a numeric code (6=TCP, 17=UDP).
+    # NormalizedEvent.protocol expects a string — coerce safely.
+    protocol_str = str(int(protocol_raw)) if protocol_raw is not None else None
 
     event = NormalizedEvent(
         event_id=str(uuid.uuid4()),
@@ -136,7 +140,7 @@ def normalize_cicids2017_row(row):
         dst_ip=None,
         src_port=None,
         dst_port=get_val(row, "Destination Port"),
-        protocol=get_val(row, "Protocol"),
+        protocol=protocol_str,
 
         flow_duration=get_val(row, "Flow Duration"),
         total_fwd_packets=get_val(row, "Total Fwd Packets"),
@@ -154,6 +158,7 @@ def normalize_cicids2017_row(row):
     )
 
     return event
+
 
 
 # ============================================================================

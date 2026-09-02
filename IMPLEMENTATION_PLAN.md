@@ -204,12 +204,12 @@ Goal: Set up the project, load and normalize public datasets, build the base age
 ```
 
 **Deliverables:**
-- [ ] `vercel.json` — complete Vercel routing configuration
-- [ ] `api/main.py` — FastAPI skeleton with `/health` endpoint
-- [ ] `api/models.py` — all Pydantic schemas
-- [ ] FAISS index initialization script
-- [ ] `requirements.txt`
-- [ ] `run_dev.bat` / `run_dev.sh` — local dev startup script (no Docker needed)
+- [x] `vercel.json` — complete Vercel routing configuration
+- [x] `api/main.py` — FastAPI skeleton with `/health` endpoint
+- [x] `api/models.py` — all Pydantic schemas
+- [x] FAISS index initialization script (`ingestion/faiss_store.py`)
+- [x] `requirements.txt`
+- [x] `run_dev.bat` / `run_dev.sh` — local dev startup script (no Docker needed)
 
 ### 7.4 Member 4 — Synthetic Log Generator & Testing Setup
 
@@ -220,9 +220,9 @@ Goal: Set up the project, load and normalize public datasets, build the base age
 - Set up GitHub repository with `.gitignore`, branch strategy, and README
 
 **Deliverables:**
-- [ ] `log_generator.py` — generates 1000+ synthetic events across 10+ attack types
-- [ ] `tests/` — pytest setup + 3 sample test cases
-- [ ] GitHub repo with README, `.gitignore`, and branch strategy documented
+- [x] `log_generator.py` — generates 1000+ synthetic events across 12 attack types
+- [x] `tests/` — pytest setup (`pytest.ini`, `conftest.py`) + 3 test modules (`test_log_generator.py`, `test_normalizer.py`, `test_dataset_loader.py`)
+- [x] GitHub repo with README, `.gitignore`, and branch strategy documented
 
 ---
 
