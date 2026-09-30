@@ -195,6 +195,13 @@ class CorrelationAgent(BaseAgent):
         """
         Find the most semantically similar past event using cosine similarity.
         Falls back gracefully if no embeddings are in memory yet.
+
+        Source-IP guard: when both this event and a candidate have a known
+        src_ip, and those IPs differ, the candidate is skipped. Semantic
+        similarity alone should never override a known, different source IP —
+        that separation is _find_incident_by_window's job. This fallback stays
+        fully active for events with no src_ip (or matching src_ip), where
+        similarity is the only signal available.
         """
         if not _event_embeddings:
             return None, [], None
@@ -206,6 +213,11 @@ class CorrelationAgent(BaseAgent):
         for eid, vec in _event_embeddings.items():
             if eid == event.event_id:
                 continue
+
+            candidate_ip = _event_metadata.get(eid, {}).get("src_ip")
+            if event.src_ip and candidate_ip and candidate_ip != event.src_ip:
+                continue
+
             norm_vec = vec / (np.linalg.norm(vec) + 1e-10)
             score = float(np.dot(query, norm_vec))
             if score > best_score:
