@@ -199,7 +199,16 @@ async def health_check() -> HealthResponse:
 
 
 def _to_class_name(snake: str) -> str:
-    """Convert 'triage_agent' → 'TriageAgent'."""
+    """Convert snake_case agent module name to class name."""
+    mapping = {
+        "mitre_agent": "MITREAgent",
+        "triage_agent": "TriageAgent",
+        "correlation_agent": "CorrelationAgent",
+        "enrichment_agent": "EnrichmentAgent",
+        "report_agent": "ReportAgent",
+    }
+    if snake in mapping:
+        return mapping[snake]
     return "".join(part.capitalize() for part in snake.split("_"))
 
 

@@ -159,3 +159,9 @@ def ping_database() -> dict:
         return {"healthy": True, "db_version": version}
     except Exception as exc:  # noqa: BLE001
         return {"healthy": False, "error": str(exc)}
+
+
+# Aliases expected by api/main.py lifespan handler
+init_db = init_async_pool
+close_db = close_async_pool
+
