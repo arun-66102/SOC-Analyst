@@ -1,3 +1,4 @@
+"""Central Phase 3 pipeline controller."""
 """
 orchestrator.py
 ---------------
@@ -36,6 +37,7 @@ logger = logging.getLogger("orchestrator")
 
 
 class Orchestrator:
+    def __init__(self) -> None:
     """
     Runs the full SOC Analyst agent pipeline on a NormalizedEvent.
 
@@ -44,11 +46,12 @@ class Orchestrator:
 
     def __init__(self, auto_register_defaults: bool = True) -> None:
         self._agents: dict[str, Optional[object]] = {
-            "triage": None,       # Phase 2 — Member 1
-            "correlation": None,  # Phase 2 — Member 2
-            "mitre": None,        # Phase 2 — Member 3
-            "enrichment": None,   # Phase 3 — Member 1
-            "report": None,       # Phase 3 — Member 3
+            "triage": None,
+            "correlation": None,
+            "mitre": None,
+            "enrichment": None,
+            "investigation": None,
+            "report": None,  # Member 3; remains optional until implemented.
         }
 
         if auto_register_defaults:
@@ -93,35 +96,16 @@ class Orchestrator:
         except Exception:
             pass
 
-    # ------------------------------------------------------------------
-    # Agent registration
-    # ------------------------------------------------------------------
     def register_agent(self, stage: str, agent: object) -> None:
-        """
-        Register an agent instance for a pipeline stage.
-
-        Parameters
-        ----------
-        stage : str
-            One of: 'triage', 'correlation', 'mitre', 'enrichment', 'report'
-        agent : BaseAgent subclass instance
-        """
         if stage not in self._agents:
-            raise ValueError(
-                f"Unknown pipeline stage '{stage}'. Valid stages: {list(self._agents)}"
-            )
+            raise ValueError(f"Unknown pipeline stage '{stage}'. Valid stages: {list(self._agents)}")
         self._agents[stage] = agent
-        logger.info("Registered agent for stage '%s': %s", stage, agent)
 
-    # ------------------------------------------------------------------
-    # Health check — polls all registered agents
-    # ------------------------------------------------------------------
     def health_check(self) -> list[dict]:
-        """Return health status of all registered agents."""
         results = []
         for stage, agent in self._agents.items():
             if agent is None:
-                results.append({"stage": stage, "agent": None, "healthy": False, "reason": "Not yet registered"})
+                results.append({"stage": stage, "agent": None, "healthy": False, "reason": "Not registered"})
             else:
                 try:
                     status = agent.health_check()  # type: ignore[attr-defined]
@@ -131,6 +115,7 @@ class Orchestrator:
                     results.append({"stage": stage, "agent": stage, "healthy": False, "error": str(exc)})
         return results
 
+    async def run_pipeline_async(self, event: NormalizedEvent) -> AnalyzeResponse:
     # ------------------------------------------------------------------
     # Synchronous pipeline execution
     # ------------------------------------------------------------------
@@ -140,51 +125,46 @@ class Orchestrator:
         """
         pipeline_run_id = str(uuid.uuid4())
         start = time.perf_counter()
-        logger.info("Pipeline run %s started for event %s", pipeline_run_id, event.event_id)
-
         results: dict[str, Optional[AgentResult]] = {
-            "triage": None,
-            "correlation": None,
-            "mitre": None,
-            "enrichment": None,
-            "report": None,
+            "triage": None, "correlation": None, "mitre": None,
+            "enrichment": None, "investigation": None, "report": None,
         }
 
-        # ---- Stage 1: Triage -------------------------------------------
-        results["triage"] = self._run_stage("triage", event)
+        results["triage"] = await self._run_stage_async("triage", event)
         if results["triage"] and results["triage"].status == "success":
-            triage_out = results["triage"].output or {}
-            if "severity" in triage_out:
-                event.severity = triage_out["severity"]
-            if "is_true_positive" in triage_out:
-                event.is_true_positive = triage_out["is_true_positive"]
+            event.status = "triaged"
+            out = results["triage"].output or {}
+            if "severity" in out:
+                event.severity = out["severity"]
+            if "is_true_positive" in out:
+                event.is_true_positive = out["is_true_positive"]
 
-        # ---- Stage 2: Correlation ---------------------------------------
-        results["correlation"] = self._run_stage("correlation", event)
+        results["correlation"] = await self._run_stage_async("correlation", event)
         if results["correlation"] and results["correlation"].status == "success":
-            corr_out = results["correlation"].output or {}
-            if "incident_id" in corr_out:
-                event.incident_id = corr_out["incident_id"]
+            event.status = "correlated"
+            out = results["correlation"].output or {}
+            if "incident_id" in out:
+                event.incident_id = out["incident_id"]
+            if "incident_summary" in out:
+                event.correlation_summary = out["incident_summary"]
 
-        # ---- Stage 3: MITRE Mapping -------------------------------------
-        results["mitre"] = self._run_stage("mitre", event)
+        results["mitre"] = await self._run_stage_async("mitre", event)
         if results["mitre"] and results["mitre"].status == "success":
-            mitre_out = results["mitre"].output or {}
-            if "techniques" in mitre_out:
-                event.mitre_techniques = [
-                    t.get("technique_id", "") for t in mitre_out["techniques"]
-                ]
+            out = results["mitre"].output or {}
+            event.mitre_techniques = [t.get("technique_id", "") for t in out.get("techniques", [])]
 
-        # ---- Stage 4: Enrichment ----------------------------------------
-        results["enrichment"] = self._run_stage("enrichment", event)
+        results["enrichment"] = await self._run_stage_async("enrichment", event)
         if results["enrichment"] and results["enrichment"].status == "success":
+            event.status = "enriched"
             event.enrichment_data = results["enrichment"].output
 
-        # ---- Stage 5: Report Generation ---------------------------------
-        results["report"] = self._run_stage("report", event)
+        results["investigation"] = await self._run_stage_async("investigation", event)
 
-        # ---- Aggregate --------------------------------------------------
+        # ReportAgent belongs to Phase 3 Member 3, so it is intentionally optional.
+        results["report"] = await self._run_stage_async("report", event)
+
         total_latency_ms = round((time.perf_counter() - start) * 1000, 2)
+        await self._persist(event, pipeline_run_id, results)
         logger.info("Pipeline run %s completed in %s ms", pipeline_run_id, total_latency_ms)
 
         # Persist alert and results to AlertStore / DB
@@ -272,10 +252,16 @@ class Orchestrator:
             correlation=results["correlation"],
             mitre=results["mitre"],
             enrichment=results["enrichment"],
+            investigation=results["investigation"],
             report=results["report"],
             total_latency_ms=total_latency_ms,
         )
 
+    def run_pipeline(self, event: NormalizedEvent) -> AnalyzeResponse:
+        """Sync entry point for scripts/tests outside an active event loop."""
+        return asyncio.run(self.run_pipeline_async(event))
+
+    async def _run_stage_async(self, stage: str, event: NormalizedEvent) -> Optional[AgentResult]:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -300,8 +286,20 @@ class Orchestrator:
         """Run a single stage asynchronously."""
         agent = self._agents.get(stage)
         if agent is None:
-            logger.debug("Stage '%s' skipped — agent not registered", stage)
             return None
+        process_async = getattr(agent, "process_async", None)
+        if process_async is not None:
+            return await process_async(event)
+        # Existing Phase 2 agents expose only sync process(). Run them in a
+        # worker thread so their asyncio.run() does not collide with FastAPI's loop.
+        return await asyncio.to_thread(agent.run, event)  # type: ignore[attr-defined]
+
+    async def _persist(self, event: NormalizedEvent, pipeline_run_id: str, results: dict[str, Optional[AgentResult]]) -> None:
+        try:
+            from database.db import persist_pipeline
+            await asyncio.to_thread(persist_pipeline, event, pipeline_run_id, results)
+        except Exception as exc:
+            logger.warning("Pipeline DB persistence skipped: %s", exc)
         try:
             if hasattr(agent, "process_async"):
                 start = time.perf_counter()
