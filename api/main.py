@@ -81,6 +81,32 @@ async def health_check() -> HealthResponse:
         agent_statuses.append({"agent": name, **status})
     return HealthResponse(status="ok", version=APP_VERSION, agents=agent_statuses, timestamp=datetime.now(timezone.utc).isoformat())
 
+    return HealthResponse(
+        status="ok",
+        version=APP_VERSION,
+        agents=agent_statuses,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+
+
+def _to_class_name(snake: str) -> str:
+    """Convert snake_case agent module name to class name."""
+    mapping = {
+        "mitre_agent": "MITREAgent",
+        "triage_agent": "TriageAgent",
+        "correlation_agent": "CorrelationAgent",
+        "enrichment_agent": "EnrichmentAgent",
+        "report_agent": "ReportAgent",
+    }
+    if snake in mapping:
+        return mapping[snake]
+    return "".join(part.capitalize() for part in snake.split("_"))
+
+
+# ---------------------------------------------------------------------------
+# Root redirect → docs
+# ---------------------------------------------------------------------------
+
 
 @app.get("/", include_in_schema=False)
 async def root() -> JSONResponse:

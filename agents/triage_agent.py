@@ -71,15 +71,14 @@ class TriageAgent(BaseAgent):
         """
         self.log_info(f"Triaging event {event.event_id} (category={event.threat_category})")
 
-        # Lazy-init LLM client
-        if self._llm is None:
-            self._llm = get_llm_client(task=GroqTask.TRIAGE)
-
         # Build prompt
         prompt = build_triage_prompt(event)
 
         # Call LLM
         try:
+            # Lazy-init LLM client
+            if self._llm is None:
+                self._llm = get_llm_client(task=GroqTask.TRIAGE)
             response = await self._llm.chat(
                 prompt=prompt,
                 system=TRIAGE_SYSTEM_PROMPT,
