@@ -1,0 +1,255 @@
+{
+  "info": {
+    "_postman_id": "4ec20643-540e-48d7-91a5-soc-analyst-phase3",
+    "name": "Agentic SOC Analyst API — Phase 3",
+    "description": "Postman API Collection for the Agentic AI-Powered Autonomous SOC Analyst.\n\nCovers:\n- System Health Probe\n- Multi-Agent Pipeline Execution (POST /api/analyze)\n- Alert Ingestion, Filtering, and Analyst Actions (GET / POST /api/alerts)\n- Incident Correlation Groups (GET /api/incidents)\n- Dynamic Investigation Reports (GET /api/reports/:id)\n- SOC Dashboard Summary Statistics (GET /api/stats)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "alert_id",
+      "value": "00000000-0000-0000-0000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "incident_id",
+      "value": "INC-TEST-001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Liveness & Agent Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Polls API uptime and health status across all registered agents (Triage, Correlation, MITRE, Enrichment, Report)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Multi-Agent Pipeline",
+      "item": [
+        {
+          "name": "Analyze Security Event (SSH Brute Force)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.event_id) {",
+                  "    pm.collectionVariables.set(\"alert_id\", jsonData.event_id);",
+                  "}",
+                  "if (jsonData.correlation && jsonData.correlation.output && jsonData.correlation.output.incident_id) {",
+                  "    pm.collectionVariables.set(\"incident_id\", jsonData.correlation.output.incident_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": {\n    \"event_id\": \"{{$guid}}\",\n    \"timestamp\": \"2026-10-05T12:00:00Z\",\n    \"src_ip\": \"185.220.101.5\",\n    \"dst_ip\": \"192.168.1.10\",\n    \"src_port\": 51234,\n    \"dst_port\": 22,\n    \"protocol\": \"TCP\",\n    \"flow_duration\": 1200000,\n    \"total_fwd_packets\": 550,\n    \"total_bwd_packets\": 12,\n    \"flow_bytes_per_sec\": 45000,\n    \"flow_packets_per_sec\": 458,\n    \"threat_category\": \"BruteForce\",\n    \"label\": \"SSH-Patator\",\n    \"source_dataset\": \"synthetic\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analyze"]
+            },
+            "description": "Submits a NormalizedEvent to the autonomous multi-agent pipeline: Triage -> Correlation -> MITRE ATT&CK Mapping -> Threat Intel Enrichment -> Report."
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze Security Event (Volumetric DDoS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": {\n    \"event_id\": \"{{$guid}}\",\n    \"timestamp\": \"2026-10-05T12:05:00Z\",\n    \"src_ip\": \"203.0.113.88\",\n    \"dst_ip\": \"192.168.1.100\",\n    \"src_port\": 49152,\n    \"dst_port\": 80,\n    \"protocol\": \"TCP\",\n    \"flow_duration\": 5000000,\n    \"total_fwd_packets\": 12000,\n    \"total_bwd_packets\": 35,\n    \"flow_bytes_per_sec\": 3200000,\n    \"flow_packets_per_sec\": 54000,\n    \"threat_category\": \"DDoS\",\n    \"label\": \"DDoS\",\n    \"source_dataset\": \"synthetic\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analyze"]
+            },
+            "description": "Simulates volumetric DDoS attack event ingestion."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Alerts",
+      "item": [
+        {
+          "name": "List All Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/alerts?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "alerts"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Fetch paginated alerts ordered newest first."
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Alerts by Severity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/alerts?severity=High",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "alerts"],
+              "query": [
+                {
+                  "key": "severity",
+                  "value": "High"
+                }
+              ]
+            },
+            "description": "Filter alerts stream for High or Critical severity alerts."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Alert by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/alerts/{{alert_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "alerts", "{{alert_id}}"]
+            },
+            "description": "Retrieve complete details, triage verdict, MITRE technique tags, and threat intel enrichment for a specific alert."
+          },
+          "response": []
+        },
+        {
+          "name": "Analyst Action (Escalate Alert)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"escalate\",\n  \"comment\": \"Verified malicious reconnaissance probe matching T1110. Escalating incident to Tier 2 IR team.\",\n  \"analyst_id\": \"analyst-dhany\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/alerts/{{alert_id}}/action",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "alerts", "{{alert_id}}", "action"]
+            },
+            "description": "Records analyst triage approval, escalation, dismissal, or closing."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Incidents & Reports",
+      "item": [
+        {
+          "name": "List Correlated Incidents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/incidents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "incidents"]
+            },
+            "description": "Returns grouped multi-event incidents identified by the sliding time-window and FAISS semantic similarity correlation engine."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Incident Investigation Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/{{incident_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "{{incident_id}}"]
+            },
+            "description": "Returns the comprehensive executive and technical investigation report for a correlated incident."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard Summary Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats"]
+            },
+            "description": "Aggregated counts (total alerts, critical, high, active incidents, true/false positives, top MITRE techniques) for the SOC Dashboard."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

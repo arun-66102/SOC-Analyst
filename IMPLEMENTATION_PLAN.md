@@ -319,10 +319,10 @@ Goal: Add threat enrichment, investigation reasoning, report generation, and exp
 - Generates a structured investigation narrative
 
 **Deliverables:**
-- [ ] `agents/enrichment_agent.py` — VirusTotal + AbuseIPDB integration
-- [ ] Rate limiter and retry logic for API calls
-- [ ] Chain-of-Thought investigation reasoning prompt + output parser
-- [ ] `tests/test_enrichment.py`
+- [x] `agents/enrichment_agent.py` — VirusTotal + AbuseIPDB integration
+- [x] Rate limiter and retry logic for API calls
+- [x] Chain-of-Thought investigation reasoning prompt + output parser
+- [x] `tests/test_enrichment.py`
 
 ### 9.2 Member 2 — Agent Orchestrator & FastAPI Backend
 
@@ -337,10 +337,10 @@ Goal: Add threat enrichment, investigation reasoning, report generation, and exp
 - `GET /api/stats` — dashboard summary stats
 
 **Deliverables:**
-- [ ] `agents/orchestrator.py` — full end-to-end pipeline
-- [ ] All FastAPI routes implemented and tested
-- [ ] Swagger UI auto-documentation at `/docs`
-- [ ] Postman collection for all endpoints
+- [x] `agents/orchestrator.py` — full end-to-end pipeline
+- [x] All FastAPI routes implemented and tested
+- [x] Swagger UI auto-documentation at `/docs`
+- [x] Postman collection for all endpoints
 
 ### 9.3 Member 3 — Report Generation Agent
 
