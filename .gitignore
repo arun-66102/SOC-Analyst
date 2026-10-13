@@ -102,3 +102,4 @@ outputs/
 # ---------------------------------------------------------------------------
 .vercel/data/cicids2017/
 data/cicids2017/
+reports/generated/
