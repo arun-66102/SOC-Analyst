@@ -341,39 +341,274 @@ class AlertStore:
     # ------------------------------------------------------------------
 
     def seed_initial_data_if_empty(self) -> None:
-        """Seed store with initial representative security events if empty."""
+        """Seed store with initial representative security events and incidents if empty."""
         with self._lock:
             if self._alerts:
                 return
 
         try:
-            from ingestion.log_generator import generate_event
+            import uuid
+            from datetime import timedelta
 
-            scenarios = [
-                ("brute_force", "BruteForce", SeverityLevel.HIGH, True, ["T1110"]),
-                ("dos", "DoS", SeverityLevel.MEDIUM, True, ["T1498"]),
-                ("port_scan", "PortScan", SeverityLevel.HIGH, True, ["T1046"]),
-                ("malware_c2", "Malware", SeverityLevel.CRITICAL, True, ["T1071"]),
-                ("benign", "Benign", SeverityLevel.LOW, False, []),
-                ("exfiltration", "Exfiltration", SeverityLevel.CRITICAL, True, ["T1048"]),
+            now = datetime.now(timezone.utc)
+
+            demo_events = [
+                # Incident INC-2026-001: Recon & Credential Access
+                NormalizedEvent(
+                    event_id="evt-001",
+                    timestamp=now - timedelta(minutes=45),
+                    src_ip="192.168.1.105",
+                    dst_ip="10.0.0.5",
+                    src_port=49152,
+                    dst_port=22,
+                    protocol="TCP",
+                    flow_duration=1250000.0,
+                    total_fwd_packets=850,
+                    total_bwd_packets=420,
+                    label="SSH-BruteForce",
+                    threat_category=ThreatCategory.BRUTE_FORCE,
+                    severity=SeverityLevel.HIGH,
+                    status=AlertStatus.INVESTIGATING,
+                    incident_id="INC-2026-001",
+                    mitre_techniques=["T1110", "T1110.001"],
+                    is_true_positive=True,
+                    source_dataset="CICIDS2017",
+                ),
+                NormalizedEvent(
+                    event_id="evt-002",
+                    timestamp=now - timedelta(minutes=50),
+                    src_ip="192.168.1.105",
+                    dst_ip="10.0.0.5",
+                    src_port=49150,
+                    dst_port=445,
+                    protocol="TCP",
+                    flow_duration=45000.0,
+                    total_fwd_packets=120,
+                    total_bwd_packets=30,
+                    label="PortScan-SYN",
+                    threat_category=ThreatCategory.PORT_SCAN,
+                    severity=SeverityLevel.MEDIUM,
+                    status=AlertStatus.CORRELATED,
+                    incident_id="INC-2026-001",
+                    mitre_techniques=["T1046"],
+                    is_true_positive=True,
+                    source_dataset="CICIDS2017",
+                ),
+                NormalizedEvent(
+                    event_id="evt-003",
+                    timestamp=now - timedelta(minutes=40),
+                    src_ip="192.168.1.105",
+                    dst_ip="10.0.0.5",
+                    src_port=49160,
+                    dst_port=22,
+                    protocol="TCP",
+                    flow_duration=850000.0,
+                    total_fwd_packets=620,
+                    total_bwd_packets=210,
+                    label="SSH-BruteForce-Success",
+                    threat_category=ThreatCategory.BRUTE_FORCE,
+                    severity=SeverityLevel.CRITICAL,
+                    status=AlertStatus.INVESTIGATING,
+                    incident_id="INC-2026-001",
+                    mitre_techniques=["T1110", "T1078"],
+                    is_true_positive=True,
+                    source_dataset="CICIDS2017",
+                ),
+                # Incident INC-2026-002: Distributed Denial of Service
+                NormalizedEvent(
+                    event_id="evt-004",
+                    timestamp=now - timedelta(minutes=30),
+                    src_ip="198.51.100.24",
+                    dst_ip="10.0.0.80",
+                    src_port=54321,
+                    dst_port=80,
+                    protocol="TCP",
+                    flow_duration=3600000.0,
+                    total_fwd_packets=45000,
+                    total_bwd_packets=1200,
+                    label="DoS-Hulk",
+                    threat_category=ThreatCategory.DOS,
+                    severity=SeverityLevel.HIGH,
+                    status=AlertStatus.TRIAGED,
+                    incident_id="INC-2026-002",
+                    mitre_techniques=["T1498", "T1498.001"],
+                    is_true_positive=True,
+                    source_dataset="CICIDS2017",
+                ),
+                NormalizedEvent(
+                    event_id="evt-005",
+                    timestamp=now - timedelta(minutes=28),
+                    src_ip="198.51.100.25",
+                    dst_ip="10.0.0.80",
+                    src_port=54322,
+                    dst_port=80,
+                    protocol="TCP",
+                    flow_duration=3200000.0,
+                    total_fwd_packets=38000,
+                    total_bwd_packets=900,
+                    label="DoS-Slowloris",
+                    threat_category=ThreatCategory.DOS,
+                    severity=SeverityLevel.CRITICAL,
+                    status=AlertStatus.TRIAGED,
+                    incident_id="INC-2026-002",
+                    mitre_techniques=["T1498"],
+                    is_true_positive=True,
+                    source_dataset="CICIDS2017",
+                ),
+                # Incident INC-2026-003: Command and Control & Exfiltration
+                NormalizedEvent(
+                    event_id="evt-006",
+                    timestamp=now - timedelta(minutes=20),
+                    src_ip="172.16.0.45",
+                    dst_ip="203.0.113.88",
+                    src_port=49200,
+                    dst_port=443,
+                    protocol="TCP",
+                    flow_duration=7200000.0,
+                    total_fwd_packets=1500,
+                    total_bwd_packets=1400,
+                    label="CobaltStrike-C2",
+                    threat_category=ThreatCategory.BOTNET,
+                    severity=SeverityLevel.CRITICAL,
+                    status=AlertStatus.INVESTIGATING,
+                    incident_id="INC-2026-003",
+                    mitre_techniques=["T1071", "T1071.001"],
+                    is_true_positive=True,
+                    source_dataset="UNSW-NB15",
+                ),
+                NormalizedEvent(
+                    event_id="evt-007",
+                    timestamp=now - timedelta(minutes=15),
+                    src_ip="172.16.0.45",
+                    dst_ip="203.0.113.88",
+                    src_port=49205,
+                    dst_port=443,
+                    protocol="TCP",
+                    flow_duration=1800000.0,
+                    total_fwd_packets=12500,
+                    total_bwd_packets=450,
+                    label="DataExfiltration-HTTPS",
+                    threat_category=ThreatCategory.INFILTRATION,
+                    severity=SeverityLevel.CRITICAL,
+                    status=AlertStatus.INVESTIGATING,
+                    incident_id="INC-2026-003",
+                    mitre_techniques=["T1048", "T1048.003"],
+                    is_true_positive=True,
+                    source_dataset="UNSW-NB15",
+                ),
+                # Incident INC-2026-004: Web Application Attack
+                NormalizedEvent(
+                    event_id="evt-008",
+                    timestamp=now - timedelta(minutes=10),
+                    src_ip="203.0.113.42",
+                    dst_ip="10.0.0.80",
+                    src_port=38210,
+                    dst_port=8080,
+                    protocol="TCP",
+                    flow_duration=150000.0,
+                    total_fwd_packets=85,
+                    total_bwd_packets=60,
+                    label="SQL-Injection",
+                    threat_category=ThreatCategory.WEB_ATTACK,
+                    severity=SeverityLevel.HIGH,
+                    status=AlertStatus.NEW,
+                    incident_id="INC-2026-004",
+                    mitre_techniques=["T1190"],
+                    is_true_positive=True,
+                    source_dataset="CICIDS2017",
+                ),
+                # Benign baseline traffic
+                NormalizedEvent(
+                    event_id="evt-009",
+                    timestamp=now - timedelta(minutes=5),
+                    src_ip="10.0.0.15",
+                    dst_ip="8.8.8.8",
+                    src_port=53210,
+                    dst_port=53,
+                    protocol="UDP",
+                    flow_duration=5000.0,
+                    total_fwd_packets=2,
+                    total_bwd_packets=2,
+                    label="Benign-DNS",
+                    threat_category=ThreatCategory.BENIGN,
+                    severity=SeverityLevel.LOW,
+                    status=AlertStatus.CLOSED,
+                    mitre_techniques=[],
+                    is_true_positive=False,
+                    source_dataset="CICIDS2017",
+                ),
+                NormalizedEvent(
+                    event_id="evt-010",
+                    timestamp=now - timedelta(minutes=2),
+                    src_ip="10.0.0.22",
+                    dst_ip="142.250.190.46",
+                    src_port=49800,
+                    dst_port=443,
+                    protocol="TCP",
+                    flow_duration=25000.0,
+                    total_fwd_packets=15,
+                    total_bwd_packets=18,
+                    label="Benign-HTTPS",
+                    threat_category=ThreatCategory.BENIGN,
+                    severity=SeverityLevel.LOW,
+                    status=AlertStatus.CLOSED,
+                    mitre_techniques=[],
+                    is_true_positive=False,
+                    source_dataset="CICIDS2017",
+                ),
             ]
 
-            base_time = datetime.now(timezone.utc)
-            for i, (attack_type, cat, sev, is_tp, techs) in enumerate(scenarios):
-                raw = generate_event(attack_type, base_timestamp=base_time)
-                from ingestion.normalizer import normalize_synthetic_event
-
-                event = normalize_synthetic_event(raw)
-                event.severity = sev
-                event.is_true_positive = is_tp
-                event.mitre_techniques = techs
-                event.status = AlertStatus.NEW if i > 2 else AlertStatus.TRIAGED
-
+            for event in demo_events:
                 self.save_alert(event)
 
-            logger.info("AlertStore seeded with %d initial demonstration alerts.", len(scenarios))
+            # Pre-seed correlated incidents
+            self._incidents["INC-2026-001"] = {
+                "incident_id": "INC-2026-001",
+                "event_ids": ["evt-001", "evt-002", "evt-003"],
+                "start_time": now - timedelta(minutes=50),
+                "end_time": now - timedelta(minutes=40),
+                "severity": SeverityLevel.CRITICAL,
+                "status": AlertStatus.INVESTIGATING,
+                "mitre_techniques": ["T1110", "T1110.001", "T1046", "T1078"],
+                "src_ips": {"192.168.1.105"},
+            }
+
+            self._incidents["INC-2026-002"] = {
+                "incident_id": "INC-2026-002",
+                "event_ids": ["evt-004", "evt-005"],
+                "start_time": now - timedelta(minutes=30),
+                "end_time": now - timedelta(minutes=28),
+                "severity": SeverityLevel.CRITICAL,
+                "status": AlertStatus.TRIAGED,
+                "mitre_techniques": ["T1498", "T1498.001"],
+                "src_ips": {"198.51.100.24", "198.51.100.25"},
+            }
+
+            self._incidents["INC-2026-003"] = {
+                "incident_id": "INC-2026-003",
+                "event_ids": ["evt-006", "evt-007"],
+                "start_time": now - timedelta(minutes=20),
+                "end_time": now - timedelta(minutes=15),
+                "severity": SeverityLevel.CRITICAL,
+                "status": AlertStatus.INVESTIGATING,
+                "mitre_techniques": ["T1071", "T1071.001", "T1048", "T1048.003"],
+                "src_ips": {"172.16.0.45"},
+            }
+
+            self._incidents["INC-2026-004"] = {
+                "incident_id": "INC-2026-004",
+                "event_ids": ["evt-008"],
+                "start_time": now - timedelta(minutes=10),
+                "end_time": now - timedelta(minutes=10),
+                "severity": SeverityLevel.HIGH,
+                "status": AlertStatus.NEW,
+                "mitre_techniques": ["T1190"],
+                "src_ips": {"203.0.113.42"},
+            }
+
+            logger.info("AlertStore seeded with %d demo alerts and %d incidents.", len(demo_events), len(self._incidents))
         except Exception as exc:
-            logger.debug("Store seeding skipped: %s", exc)
+            logger.warning("Store seeding failed: %s", exc, exc_info=True)
 
     # ------------------------------------------------------------------
     # Optional Neon PostgreSQL Helpers (Fail-Safe)

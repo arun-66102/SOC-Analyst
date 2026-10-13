@@ -15,7 +15,7 @@ from api.models import HealthResponse
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
 logger = logging.getLogger(__name__)
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
 APP_TITLE = "Agentic SOC Analyst API"
 APP_DESCRIPTION = "Multi-agent LLM system for autonomous alert triage, correlation, MITRE mapping, threat enrichment, investigation and report generation."
 
@@ -42,14 +42,34 @@ async def lifespan(app: FastAPI):
         logger.debug("DB close skipped: %s", exc)
 
 
-app = FastAPI(title=APP_TITLE, description=APP_DESCRIPTION, version=APP_VERSION, docs_url="/docs", redoc_url="/redoc", openapi_url="/openapi.json", lifespan=lifespan)
+app = FastAPI(
+    title=APP_TITLE,
+    description=APP_DESCRIPTION,
+    version=APP_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    lifespan=lifespan,
+)
 
-_allowed_origins = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]
+_allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
 if os.getenv("VERCEL_URL"):
     _allowed_origins.append(f"https://{os.getenv('VERCEL_URL')}")
 if os.getenv("FRONTEND_URL"):
     _allowed_origins.append(os.getenv("FRONTEND_URL"))
-app.add_middleware(CORSMiddleware, allow_origins=_allowed_origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 try:
     from api.routes import alerts, agents, reports
@@ -63,9 +83,19 @@ _start_time = time.time()
 
 
 def _to_class_name(snake: str) -> str:
-    if snake == "mitre_agent":
-        return "MITREAgent"
+    """Convert snake_case agent module name to class name."""
+    mapping = {
+        "mitre_agent": "MITREAgent",
+        "triage_agent": "TriageAgent",
+        "correlation_agent": "CorrelationAgent",
+        "enrichment_agent": "EnrichmentAgent",
+        "investigation_agent": "InvestigationAgent",
+        "report_agent": "ReportAgent",
+    }
+    if snake in mapping:
+        return mapping[snake]
     return "".join(part.capitalize() for part in snake.split("_"))
+
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 async def health_check() -> HealthResponse:
@@ -79,33 +109,12 @@ async def health_check() -> HealthResponse:
         except Exception as exc:
             status = {"status": "unavailable", "healthy": False, "error": str(exc)}
         agent_statuses.append({"agent": name, **status})
-    return HealthResponse(status="ok", version=APP_VERSION, agents=agent_statuses, timestamp=datetime.now(timezone.utc).isoformat())
-
     return HealthResponse(
         status="ok",
         version=APP_VERSION,
         agents=agent_statuses,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
-
-
-def _to_class_name(snake: str) -> str:
-    """Convert snake_case agent module name to class name."""
-    mapping = {
-        "mitre_agent": "MITREAgent",
-        "triage_agent": "TriageAgent",
-        "correlation_agent": "CorrelationAgent",
-        "enrichment_agent": "EnrichmentAgent",
-        "report_agent": "ReportAgent",
-    }
-    if snake in mapping:
-        return mapping[snake]
-    return "".join(part.capitalize() for part in snake.split("_"))
-
-
-# ---------------------------------------------------------------------------
-# Root redirect → docs
-# ---------------------------------------------------------------------------
 
 
 @app.get("/", include_in_schema=False)
