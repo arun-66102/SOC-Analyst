@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAlerts } from '../api'
-import { Search, Filter, RefreshCw, ChevronRight, AlertTriangle } from 'lucide-react'
+import { Filter, ChevronRight, AlertTriangle } from 'lucide-react'
+import SeverityBadge from '../components/SeverityBadge'
+import { useAutoRefresh, AutoRefreshBadge } from '../components/AutoRefresh'
 
 const SEVERITIES   = ['', 'Critical', 'High', 'Medium', 'Low']
 const STATUSES     = ['', 'new', 'triaged', 'correlated', 'enriched', 'reported', 'escalated', 'dismissed', 'closed']
 const CATEGORIES   = ['', 'BruteForce', 'DoS', 'DDoS', 'PortScan', 'Infiltration', 'WebAttack', 'Botnet', 'Malware', 'Exfiltration', 'Backdoor', 'Reconnaissance', 'Benign', 'Unknown']
 
-function SeverityBadge({ sev }) {
-  const map = { Critical: 'critical', High: 'high', Medium: 'medium', Low: 'low' }
-  return <span className={`badge badge-${map[sev] || 'unknown'}`}>{sev || '—'}</span>
-}
+
 
 function TpBadge({ tp }) {
   if (tp === null || tp === undefined) return <span className="badge badge-unknown">—</span>
@@ -34,8 +33,8 @@ export default function AlertsPage() {
     setLoading(true)
     try {
       const params = { limit, offset: page * limit }
-      if (severity)  params.severity       = severity
-      if (status)    params.status         = status
+      if (severity)  params.severity        = severity
+      if (status)    params.status          = status
       if (category)  params.threat_category = category
       const { data } = await getAlerts(params)
       setAlerts(data.alerts || [])
@@ -47,7 +46,9 @@ export default function AlertsPage() {
     }
   }, [severity, status, category, page])
 
-  useEffect(() => { load() }, [load])
+  // 5-second auto-refresh (real-time alert feed)
+  const { lastRefresh, manualRefresh } = useAutoRefresh(load, 5000)
+
 
   const totalPages = Math.ceil(total / limit)
 
@@ -58,9 +59,11 @@ export default function AlertsPage() {
           <h1 className="page-title">Security Alerts</h1>
           <p className="page-subtitle">{total} alerts · Page {page + 1} of {Math.max(1, totalPages)}</p>
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={load}>
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <AutoRefreshBadge
+          lastRefresh={lastRefresh}
+          onRefresh={manualRefresh}
+          spinning={loading}
+        />
       </div>
 
       {/* Filters */}

@@ -1,16 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getAlert, postAction, getReport } from '../api'
-import {
-  ArrowLeft, Shield, GitBranch, AlertTriangle, Search,
-  CheckCircle, XCircle, ArrowUpCircle, Clock, ChevronRight,
-  FileText, Network
-} from 'lucide-react'
+import { getAlert, getReport } from '../api'
+import { ArrowLeft, Shield, AlertTriangle, Search, FileText, Network, CheckCircle } from 'lucide-react'
+import SeverityBadge from '../components/SeverityBadge'
+import AnalystActionPanel from '../components/AnalystActionPanel'
 
-function SeverityBadge({ sev }) {
-  const map = { Critical: 'critical', High: 'high', Medium: 'medium', Low: 'low' }
-  return <span className={`badge badge-${map[sev] || 'unknown'}`}>{sev || '—'}</span>
-}
+
 
 function InfoRow({ label, value, mono }) {
   return (
@@ -39,16 +34,11 @@ export default function AlertDetail() {
   const [alert, setAlert]     = useState(null)
   const [report, setReport]   = useState(null)
   const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [actionComment, setActionComment] = useState('')
-  const [actionMsg, setActionMsg] = useState('')
-
   useEffect(() => {
     setLoading(true)
     getAlert(id)
       .then(({ data }) => {
         setAlert(data)
-        // Try to load report if incident exists
         if (data.incident_id) {
           getReport(data.incident_id)
             .then(r => setReport(r.data))
@@ -59,24 +49,12 @@ export default function AlertDetail() {
       .finally(() => setLoading(false))
   }, [id])
 
-  const takeAction = async (action) => {
-    setActionLoading(true)
-    setActionMsg('')
+  const handleActionSuccess = async (newStatus) => {
+    // Refresh the alert to reflect updated status
     try {
-      const { data } = await postAction(id, {
-        action,
-        comment: actionComment,
-        analyst_id: 'analyst-1',
-      })
-      setActionMsg(`✓ Action '${data.action}' recorded. New status: ${data.new_alert_status}`)
-      // Refresh alert
-      const r = await getAlert(id)
-      setAlert(r.data)
-    } catch (e) {
-      setActionMsg(`✗ Error: ${e.response?.data?.detail || e.message}`)
-    } finally {
-      setActionLoading(false)
-    }
+      const { data } = await getAlert(id)
+      setAlert(data)
+    } catch (_) {}
   }
 
   if (loading) {
@@ -232,49 +210,11 @@ export default function AlertDetail() {
 
         {/* Analyst Actions */}
         <Section title="Analyst Actions" icon={CheckCircle}>
-          <p className="section-title" style={{ marginBottom: 8 }}>Current Status: <strong>{alert.status}</strong></p>
-          <textarea
-            className="input"
-            rows={2}
-            placeholder="Add a comment (optional)…"
-            value={actionComment}
-            onChange={e => setActionComment(e.target.value)}
-            style={{ resize: 'vertical', marginBottom: 10, fontFamily: 'var(--font-sans)' }}
+          <AnalystActionPanel
+            alertId={id}
+            currentStatus={alert.status}
+            onSuccess={handleActionSuccess}
           />
-          <div className="action-buttons">
-            <button
-              className="btn btn-success btn-sm"
-              disabled={actionLoading}
-              onClick={() => takeAction('approve')}
-            >
-              <CheckCircle size={13} /> Approve
-            </button>
-            <button
-              className="btn btn-primary btn-sm"
-              style={{ background: 'var(--high)', color: '#fff' }}
-              disabled={actionLoading}
-              onClick={() => takeAction('escalate')}
-            >
-              <ArrowUpCircle size={13} /> Escalate
-            </button>
-            <button
-              className="btn btn-ghost btn-sm"
-              disabled={actionLoading}
-              onClick={() => takeAction('dismiss')}
-            >
-              <XCircle size={13} /> Dismiss
-            </button>
-          </div>
-          {actionMsg && (
-            <p style={{
-              marginTop: 10, fontSize: '0.82rem', padding: '8px 12px', borderRadius: 6,
-              background: actionMsg.startsWith('✓') ? 'var(--low-dim)' : 'var(--critical-dim)',
-              color: actionMsg.startsWith('✓') ? 'var(--low)' : 'var(--critical)',
-              border: `1px solid ${actionMsg.startsWith('✓') ? 'rgba(48,209,88,0.3)' : 'rgba(255,45,85,0.3)'}`,
-            }}>
-              {actionMsg}
-            </p>
-          )}
         </Section>
       </div>
 

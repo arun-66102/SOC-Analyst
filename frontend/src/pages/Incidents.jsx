@@ -2,11 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getIncidents, getAlerts } from '../api'
 import { GitBranch, Clock, Shield, AlertTriangle, ChevronRight, RefreshCw } from 'lucide-react'
-
-function SeverityBadge({ sev }) {
-  const map = { Critical: 'critical', High: 'high', Medium: 'medium', Low: 'low' }
-  return <span className={`badge badge-${map[sev] || 'unknown'}`}>{sev || '—'}</span>
-}
+import SeverityBadge from '../components/SeverityBadge'
 
 function SevBar({ events }) {
   const counts = { Critical: 0, High: 0, Medium: 0, Low: 0, Unknown: 0 }

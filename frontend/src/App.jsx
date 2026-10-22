@@ -91,7 +91,7 @@ function Sidebar({ open, setOpen }) {
 
         {/* Footer */}
         <div className="sidebar-footer">
-          <span className="sidebar-footer-text">v0.3.0 — Phase 3 Complete</span>
+          <span className="sidebar-footer-text">v0.4.0 — Phase 4 In Progress</span>
         </div>
       </aside>
     </>
