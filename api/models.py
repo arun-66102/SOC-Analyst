@@ -38,6 +38,7 @@ class AlertStatus(str, Enum):
     NEW = "new"
     TRIAGED = "triaged"
     CORRELATED = "correlated"
+    INVESTIGATING = "investigating"
     ENRICHED = "enriched"
     REPORTED = "reported"
     ESCALATED = "escalated"
@@ -49,6 +50,7 @@ class AnalystAction(str, Enum):
     APPROVE = "approve"
     ESCALATE = "escalate"
     DISMISS = "dismiss"
+    CLOSE = "close"
 
 
 class NormalizedEvent(BaseModel):

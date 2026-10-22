@@ -1,6 +1,14 @@
-﻿# 🛡️ Agentic AI-Powered Autonomous SOC Analyst
+# 🛡️ Autonomous Agentic AI SOC Analyst (MAS-SOC)
 
-> An autonomous, multi-agent Security Operations Center (SOC) analyst that ingests security alerts, investigates threats, maps to MITRE ATT&CK, scores risk, and generates actionable incident reports — with Human-in-the-Loop approval before response.
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
+[![Groq Cloud](https://img.shields.io/badge/LLM-Groq_Cloud_LPU-f55036.svg)](https://groq.com)
+[![React Vite](https://img.shields.io/badge/Frontend-React_+_Vite-61dafb.svg?logo=react)](https://vitejs.dev)
+[![FAISS](https://img.shields.io/badge/Vector_Store-FAISS_CPU-green.svg)](https://github.com/facebookresearch/faiss)
+[![PostgreSQL](https://img.shields.io/badge/Database-Neon_PostgreSQL-336791.svg?logo=postgresql)](https://neon.tech)
+[![Tests Passing](https://img.shields.io/badge/Tests-193_Passed-brightgreen.svg)](tests/)
+
+> An autonomous, multi-agent Security Operations Center (SOC) analyst pipeline that ingests security telemetry, classifies severity, correlates incidents, maps to MITRE ATT&CK, enriches indicators of compromise, reconstructs attack chains with Chain-of-Thought reasoning, and compiles analyst-ready reports — with Human-in-the-Loop decision governance.
 
 ---
 
@@ -8,465 +16,290 @@
 
 - [Overview](#-overview)
 - [System Architecture](#-system-architecture)
-- [Agent Pipeline](#-agent-pipeline)
+- [The 6-Agent Pipeline](#-the-6-agent-pipeline)
 - [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
+- [Project Directory Structure](#-project-directory-structure)
 - [Getting Started](#-getting-started)
-- [Configuration](#-configuration)
-- [Agent Descriptions](#-agent-descriptions)
-- [SOC Dashboard](#-soc-dashboard)
-- [Incident Response](#-incident-response)
-- [Contributing](#-contributing)
+  - [Prerequisites](#prerequisites)
+  - [1-Click Startup (Recommended)](#1-click-startup-windows)
+  - [Manual Step-by-Step Setup](#manual-step-by-step-setup)
+- [Configuration (.env)](#-configuration-env)
+- [API Endpoints](#-api-endpoints)
+- [Dataset & Ground-Truth Benchmarking](#-dataset--ground-truth-benchmarking)
+- [Agent Evaluation Metrics Matrix](#-agent-evaluation-metrics-matrix)
+- [Testing & Benchmarking](#-testing--benchmarking)
 - [License](#-license)
 
 ---
 
 ## 🔍 Overview
 
-Traditional SOC operations rely heavily on manual triage, which is slow, expensive, and error-prone at scale. This project implements a **fully autonomous, agentic AI pipeline** that:
+Modern Security Operations Centers face catastrophic **alert fatigue**, processing upwards of 10,000+ daily alerts where over 80–90% are harmless background noise. Traditional rules-based SIEMs lack contextual reasoning, while human tier-1 triage averages 20–45 minutes per incident.
 
-- **Collects & correlates** alerts from heterogeneous security devices
-- **Enriches threats** using real-world Threat Intelligence APIs
-- **Investigates** incidents by analyzing logs and reconstructing attack chains
-- **Maps** adversary behavior to the **MITRE ATT&CK** framework
-- **Scores** risk and prioritizes incidents for analyst attention
-- **Recommends & generates** containment actions and executive-ready reports
-- **Presents** findings on an interactive SOC Dashboard
-- **Waits for human approval** before executing any response action
-
-This system acts as a **Tier 1–2 SOC Analyst**, dramatically reducing Mean Time to Detect (MTTD) and Mean Time to Respond (MTTR).
+This project implements an **autonomous, end-to-end multi-agent AI system** acting as an automated **Tier 1–2 SOC Analyst**:
+- **High-Throughput Triage**: Sub-second severity classification and true/false positive determination.
+- **Incident Correlation**: Mathematical grouping of multi-vector attacks across sliding time windows using FAISS embeddings.
+- **Semantic MITRE ATT&CK Mapping**: Instant vector retrieval across 697 enterprise techniques.
+- **Live Threat Intelligence**: Active enrichment via VirusTotal and AbuseIPDB with automated RFC 1918 private IP filtering.
+- **Deep Investigation**: Chain-of-Thought (CoT) reasoning for attack chain synthesis and containment playbooks.
+- **Executive & Technical Reporting**: Automated generation of responsive incident summaries and structured JSON.
+- **Human-in-the-Loop (HITL)**: Interactive React dashboard for analyst review, action approval, escalation, and dismissal.
 
 ---
 
 ## 🏗️ System Architecture
 
-```
-                       SECURITY DEVICES
- ┌──────────────────────────────────────────────────────────────┐
- │  Endpoints │ Servers │ Firewall │ IDS │ Email │ Cloud │ Apps  │
- └──────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-                    LOG COLLECTION LAYER
-             (Sysmon + Zeek + Wazuh + Filebeat)
-                              │
-                              ▼
-                   ALERT CORRELATION AGENT
-             • Merge alerts from different sources
-             • Remove duplicate events
-             • Create a unified incident
-                              │
-                              ▼
-                THREAT INTELLIGENCE AGENT
-           • Query VirusTotal
-           • Query AbuseIPDB
-           • Query AlienVault OTX
-           • Query MISP
-                              │
-                              ▼
-                 INVESTIGATION AGENT
-           • Analyze related logs
-           • Identify attack chain
-           • Collect supporting evidence
-                              │
-                              ▼
-                 MITRE MAPPING AGENT
-           • Identify ATT&CK tactics
-           • Identify ATT&CK techniques
-                              │
-                              ▼
-                   RISK SCORING AGENT
-           • Calculate severity
-           • Calculate confidence score
-           • Prioritize incident
-                              │
-                              ▼
-                RECOMMENDATION AGENT
-           • Block malicious IP
-           • Isolate endpoint
-           • Reset credentials
-           • Suggest containment
-                              │
-                              ▼
-                REPORT GENERATION AGENT
-           • Executive summary
-           • Timeline
-           • Indicators of Compromise (IOCs)
-           • MITRE ATT&CK mapping
-           • Recommended actions
-                              │
-                              ▼
-                      SOC DASHBOARD
-           • Investigation Summary
-           • Attack Timeline
-           • Risk Score
-           • MITRE View
-           • Download Report
-                              │
-                              ▼
-                  HUMAN SOC ANALYST
-           • Review findings
-           • Validate investigation
-           • Approve response
-                              │
-                              ▼
-                    INCIDENT RESPONSE
-           • Block IP / Domain
-           • Isolate Endpoint
-           • Reset Credentials
-           • Create Ticket
-           • Document Incident
+```mermaid
+flowchart TD
+    A([🌐 Network Telemetry / SIEM / Webhook / CSV]) -->|POST /api/alerts/analyze| B[FastAPI Ingestion Engine — api/main.py]
+    B --> C[Orchestrator — agents/orchestrator.py]
+    
+    subgraph Agent Pipeline [Sequential Agent Pipeline]
+        C --> D[Stage 1: TriageAgent\nopenai/gpt-oss-120b]
+        D --> E[Stage 2: CorrelationAgent\nall-MiniLM-L6-v2 + FAISS + Llama-3.1-8b]
+        E --> F[Stage 3: MITREAgent\nFAISS Index 697 STIX + gpt-oss-120b]
+        F --> G[Stage 4: EnrichmentAgent\nAbuseIPDB + VirusTotal APIs + Llama-3.1-8b]
+        G --> H[Stage 5: InvestigationAgent\nDeepSeek-R1 Distill 70B CoT]
+        H --> I[Stage 6: ReportAgent\nJinja2 + DeepSeek-R1 Distill 70B]
+    end
+
+    I --> J[(Persistence Store\nNeon PostgreSQL / In-Memory Fallback)]
+    I --> K([Interactive SOC Dashboard\nReact + Vite on :5173])
+    K --> L{Human Analyst Decision}
+    L -->|Approve / Escalate / Dismiss| J
+
+    style C fill:#1e3a5f,color:#fff
+    style D fill:#8b1e0f,color:#fff
+    style E fill:#8b1e0f,color:#fff
+    style F fill:#8b1e0f,color:#fff
+    style G fill:#8b1e0f,color:#fff
+    style H fill:#8b1e0f,color:#fff
+    style I fill:#8b1e0f,color:#fff
+    style K fill:#00758f,color:#fff
 ```
 
 ---
 
-## 🤖 Agent Pipeline
+## 🤖 The 6-Agent Pipeline
 
-The system is composed of **7 specialized AI agents** working in a sequential pipeline, orchestrated via a multi-agent framework (LangGraph / CrewAI):
+All agents inherit from [`agents/base_agent.py`](agents/base_agent.py), providing standard lifecycle logging, latency measurement, and health check interfaces:
 
-| # | Agent | Role | Key Actions |
-|---|-------|------|-------------|
-| 1 | **Alert Correlation Agent** | Normalizes & deduplicates alerts from all sources | Merges SIEM/EDR/Firewall/IDS events into a single unified incident object |
-| 2 | **Threat Intelligence Agent** | Enriches IOCs with external threat feeds | Queries VirusTotal, AbuseIPDB, AlienVault OTX, MISP |
-| 3 | **Investigation Agent** | Reconstructs the attack chain | Analyzes logs, identifies lateral movement, collects evidence |
-| 4 | **MITRE Mapping Agent** | Classifies adversary behavior | Maps observed TTPs to ATT&CK tactics & techniques |
-| 5 | **Risk Scoring Agent** | Prioritizes the incident | Computes severity score and confidence rating |
-| 6 | **Recommendation Agent** | Proposes containment | Suggests specific, prioritized response actions |
-| 7 | **Report Generation Agent** | Produces the final report | Generates executive summary, full timeline, IOC list, and MITRE view |
+| Stage | Agent | Engine / Model | Core Responsibility |
+|---|---|---|---|
+| **1** | **Triage Agent** | `openai/gpt-oss-120b` *(via Groq)* | Evaluates packet metrics and few-shot exemplars to assign severity (`Critical`, `High`, `Medium`, `Low`) and True/False Positive verdicts. |
+| **2** | **Correlation Agent** | `all-MiniLM-L6-v2` + FAISS + `llama-3.1-8b-instant` | Projects flow attributes into 384-dim vector space and correlates events within a 300s window into unified incident IDs. |
+| **3** | **MITRE Agent** | FAISS STIX Index + `openai/gpt-oss-120b` | Cosine similarity search against 697 ATT&CK techniques with LLM validation of technique IDs and tactics. |
+| **4** | **Enrichment Agent** | VirusTotal & AbuseIPDB APIs + `llama-3.1-8b-instant` | Filters internal RFC 1918 traffic, applies rate-limiting, and queries live public threat reputation scores. |
+| **5** | **Investigation Agent** | `deepseek-r1-distill-llama-70b` | Synthesizes all stage findings using Chain-of-Thought (CoT) reasoning to build evidence chains and propose containment actions. |
+| **6** | **Report Agent** | Jinja2 Engine + `deepseek-r1-distill-llama-70b` | Compiles comprehensive HTML/JSON investigation reports with visual badges, IOC tables, and response playbooks. |
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Core AI & Agent Framework
-| Component | Technology |
-|-----------|------------|
-| LLM Backend | OpenAI GPT-4o / Anthropic Claude / Google Gemini |
-| Agent Orchestration | LangGraph / CrewAI |
-| Reasoning Pattern | ReAct (Reasoning + Acting) |
-| Structured Outputs | Pydantic v2 |
+### Backend & AI
+- **Python 3.11+ / FastAPI**: Async web framework and REST API routing.
+- **Groq Cloud LPU™**: Ultra-fast inference hosting open-source models (`openai/gpt-oss-120b`, `llama-3.1-8b-instant`, `deepseek-r1-distill-llama-70b`).
+- **sentence-transformers (`all-MiniLM-L6-v2`)**: Generates 384-dimensional dense semantic vectors.
+- **FAISS (Facebook AI Similarity Search)**: Vector index for technique retrieval and event clustering.
+- **Pydantic v2**: High-performance data validation and contract enforcement.
 
-### Log Collection & SIEM
-| Component | Technology |
-|-----------|------------|
-| Host Telemetry | Sysmon (Windows Events) |
-| Network Telemetry | Zeek (formerly Bro) |
-| SIEM / EDR | Wazuh |
-| Log Shipper | Filebeat (Elastic Stack) |
+### Data & Persistence
+- **Dual-Mode Persistence**: Seamless synchronization to **Neon Serverless PostgreSQL** with instant failover to a thread-safe in-memory repository for local development and offline environments.
+- **Threat Intelligence**: Live integration with VirusTotal (4 req/min rate-limited) and AbuseIPDB.
 
-### Threat Intelligence APIs
-| Provider | Data |
-|----------|------|
-| [VirusTotal](https://www.virustotal.com) | File hash, URL, IP reputation |
-| [AbuseIPDB](https://www.abuseipdb.com) | IP abuse reports & confidence score |
-| [AlienVault OTX](https://otx.alienvault.com) | Threat pulses, IOC lookup |
-| [MISP](https://www.misp-project.org) | Shared threat intelligence platform |
-
-### Knowledge & RAG
-| Component | Technology |
-|-----------|------------|
-| Vector Store | ChromaDB / FAISS |
-| Embedding Model | OpenAI `text-embedding-3-small` |
-| Playbook Source | NIST SP 800-61, SANS Incident Response |
-
-### Dashboard & Reporting
-| Component | Technology |
-|-----------|------------|
-| SOC Dashboard | Streamlit / FastAPI + React |
-| Report Format | PDF / Markdown / JSON |
-| Ticket System | Jira API / ServiceNow (optional) |
+### Frontend
+- **React 18 & Vite**: Fast responsive SOC Dashboard on port `5173`.
+- **Proxy Architecture**: Vite dev server proxies `/api` and `/health` requests directly to FastAPI on port `8000`.
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Directory Structure
 
 ```
 SOC-Analyst/
-├── README.md                          # Project overview (this file)
-│
-├── agents/                            # Individual AI agent modules
-│   ├── alert_correlation_agent.py     # Merges & deduplicates alerts
-│   ├── threat_intel_agent.py          # Queries TI APIs (VT, AbuseIPDB, OTX)
-│   ├── investigation_agent.py         # Log analysis & attack chain reconstruction
-│   ├── mitre_mapping_agent.py         # ATT&CK tactic/technique classification
-│   ├── risk_scoring_agent.py          # Severity & confidence computation
-│   ├── recommendation_agent.py        # Containment & remediation suggestions
-│   └── report_generation_agent.py     # Final report synthesis
-│
-├── orchestrator/                      # Multi-agent pipeline coordination
-│   ├── pipeline.py                    # Main agent orchestration graph (LangGraph)
-│   └── state.py                       # Shared investigation state schema
-│
-├── tools/                             # External tool integrations
-│   ├── virustotal.py                  # VirusTotal API client
-│   ├── abuseipdb.py                   # AbuseIPDB API client
-│   ├── otx.py                         # AlienVault OTX API client
-│   ├── misp.py                        # MISP API client
-│   └── log_query.py                   # SIEM / Wazuh log query tool
-│
-├── models/                            # Pydantic data models
-│   ├── alert.py                       # Normalized alert schema
-│   ├── incident.py                    # Unified incident object
-│   ├── threat_intel.py                # TI enrichment result schema
-│   ├── mitre.py                       # MITRE ATT&CK mapping schema
-│   └── report.py                      # Final report schema
-│
-├── rag/                               # Retrieval-Augmented Generation layer
-│   ├── playbook_indexer.py            # Indexes NIST/SANS playbooks into vector store
-│   ├── playbook_retriever.py          # Retrieves relevant playbook steps
-│   └── playbooks/                     # Raw playbook documents (PDF/Markdown)
-│
-├── dashboard/                         # SOC Analyst Dashboard
-│   ├── app.py                         # Streamlit / FastAPI app entry point
-│   ├── components/                    # UI components (timeline, MITRE view, etc.)
-│   └── templates/                     # Report HTML templates
-│
-├── data/                              # Sample data for testing
-│   ├── sample_alerts/                 # Example alert JSONs (SIEM, EDR, Firewall)
-│   └── sample_logs/                   # Example raw logs (Syslog, CEF, EVTX)
-│
-├── tests/                             # Unit and integration tests
-│   ├── test_agents.py
-│   ├── test_tools.py
-│   └── test_pipeline.py
-│
-├── config/                            # Configuration files
-│   ├── settings.yaml                  # Global app settings
-│   └── mitre_techniques.json          # Local ATT&CK technique definitions
-│
-├── .env.example                       # Environment variable template
-├── requirements.txt                   # Python dependencies
-└── docker-compose.yml                 # Docker setup (Wazuh, Filebeat, ChromaDB)
+├── agents/                            # Multi-agent AI core
+│   ├── base_agent.py                  # Abstract base class for all agents
+│   ├── orchestrator.py                # Pipeline controller & stage sequencing
+│   ├── llm_client.py                  # Groq client with task-to-model routing
+│   ├── triage_agent.py                # Stage 1: Severity & TP/FP classification
+│   ├── correlation_agent.py           # Stage 2: Temporal & semantic incident clustering
+│   ├── mitre_agent.py                 # Stage 3: MITRE ATT&CK vector mapping
+│   ├── enrichment_agent.py            # Stage 4: Live threat intel enrichment
+│   ├── investigation_agent.py         # Stage 5: CoT attack chain synthesis
+│   ├── report_agent.py                # Stage 6: HTML & JSON report generation
+│   └── prompts/                       # Few-shot templates and system prompts
+├── api/                               # FastAPI application
+│   ├── main.py                        # App entry point, CORS, lifespan handlers
+│   ├── models.py                      # Pydantic schemas (NormalizedEvent, AgentResult)
+│   └── routes/                        # Modular route controllers
+│       ├── alerts.py                  # Alert listing, detail, and analyst actions
+│       ├── agents.py                  # Pipeline execution & incident metrics
+│       └── reports.py                 # Dynamic incident report endpoints
+├── database/                          # Storage layer
+│   ├── db.py                          # PostgreSQL (psycopg2 / asyncpg) connection pools
+│   └── store.py                       # Thread-safe repository & demo pre-seeding
+├── ingestion/                         # Data ingestion & normalization
+│   ├── dataset_loader.py              # Ingests CICIDS2017 & UNSW-NB15 datasets
+│   ├── normalizer.py                  # Maps raw logs to NormalizedEvent schema
+│   ├── faiss_store.py                 # FAISS vector store manager
+│   ├── log_generator.py               # Synthetic multi-attack event generator
+│   └── mitre_parser.py                # Parses STIX enterprise-attack bundle
+├── frontend/                          # Interactive SOC Dashboard (React + Vite)
+├── benchmarks/                        # Performance and latency benchmark suites
+├── templates/                         # Jinja2 HTML report templates
+├── tests/                             # Pytest automated test suite (190+ tests)
+├── run_dev.bat                        # Windows 1-click startup script
+├── run_dev.sh                         # Linux / macOS startup script
+└── requirements.txt                   # Pinned backend dependencies
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Clone the Repository
+### Prerequisites
+- **Python**: Version 3.11 or higher (`python --version`)
+- **Node.js**: Version 18 or higher (`node --version`)
+- **Groq API Key**: Free API key from [console.groq.com](https://console.groq.com)
 
+---
+
+### 1-Click Startup (Windows)
+
+Double-click or run from command prompt:
+```bat
+run_dev.bat
+```
+*This verifies Python/Node, auto-generates `.env` from template if missing, installs frontend dependencies, and launches both backend (`:8000`) and frontend (`:5173`) in dedicated windows.*
+
+For Linux / macOS:
 ```bash
-git clone https://github.com/arun-66102/SOC-Analyst.git
-cd SOC-Analyst
+chmod +x run_dev.sh
+./run_dev.sh
 ```
 
-### 2. Create & Activate a Virtual Environment
+---
 
-```bash
-python -m venv venv
+### Manual Step-by-Step Setup
 
-# Windows
-venv\Scripts\activate
-
-# macOS / Linux
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Set Up Environment Variables
-
+#### 1. Configure Environment
 ```bash
 cp .env.example .env
-# Edit .env and fill in your API keys (see Configuration section)
+```
+Edit `.env` and add your `GROQ_API_KEY`. (Threat intel keys and database URLs are optional).
+
+#### 2. Start the Backend (Terminal 1)
+```powershell
+# Create & activate virtual environment (optional)
+python -m venv .venv
+.venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Launch FastAPI server
+python -m uvicorn api.main:app --reload --port 8000 --host 0.0.0.0
 ```
 
-### 5. (Optional) Start Supporting Services via Docker
-
-```bash
-docker-compose up -d
+#### 3. Start the Frontend (Terminal 2)
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
-### 6. Run the Pipeline
+#### 4. Open Interfaces
+- **SOC Dashboard UI**: [http://localhost:5173](http://localhost:5173)
+- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health Check Endpoint**: [http://localhost:8000/health](http://localhost:8000/health)
 
-```bash
-# Run the full agentic pipeline with a sample alert
-python -m orchestrator.pipeline --input data/sample_alerts/brute_force.json
+---
 
-# Launch the SOC Dashboard
-streamlit run dashboard/app.py
+## ⚙️ Configuration (.env)
+
+| Variable | Required? | Default / Purpose |
+|---|---|---|
+| `GROQ_API_KEY` | **Yes** | Authentication for Groq Cloud LLM inference |
+| `GROQ_MODEL_TRIAGE` | No | `openai/gpt-oss-120b` (Classification accuracy) |
+| `GROQ_MODEL_CORRELATION`| No | `llama-3.1-8b-instant` (High-volume speed) |
+| `GROQ_MODEL_MITRE` | No | `openai/gpt-oss-120b` (Precision ATT&CK tagging) |
+| `GROQ_MODEL_ENRICHMENT` | No | `llama-3.1-8b-instant` (Fast lookup reasoning) |
+| `GROQ_MODEL_REPORT` | No | `deepseek-r1-distill-llama-70b` (Deep chain-of-thought) |
+| `VIRUSTOTAL_API_KEY` | No | Threat reputation scores for external IPs |
+| `ABUSEIPDB_API_KEY` | No | IP abuse confidence scoring |
+| `NEON_DB_URL` | No | Cloud PostgreSQL connection string (falls back to memory) |
+| `CORRELATION_WINDOW_SECONDS` | No | `300` (5-minute sliding window) |
+
+---
+
+## 🌐 API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/analyze` | Ingests a `NormalizedEvent` and executes the full 6-agent pipeline |
+| `GET` | `/api/alerts` | Paginated listing of alerts with severity, status, and category filters |
+| `GET` | `/api/alerts/{alert_id}` | Detailed alert object with all agent outputs |
+| `POST`| `/api/alerts/{alert_id}/action` | Records human analyst decision (`approve`, `escalate`, `dismiss`, `close`) |
+| `GET` | `/api/incidents` | Lists correlated incident groups and summarized attack chains |
+| `GET` | `/api/stats` | Aggregated dashboard metrics (severity counts, TP/FP rates, latency) |
+| `GET` | `/api/reports/{incident_id}` | Fetches or dynamically compiles full investigation report |
+| `GET` | `/health` | System and per-agent dependency health status |
+
+---
+
+## 📊 Dataset & Ground-Truth Benchmarking
+
+The system is tested against real-world, peer-reviewed network intrusion datasets:
+
+1. **CICIDS2017**: Contains PCAP-derived flow captures of modern attacks (DDoS, DoS, Brute Force, Port Scan, Web Attacks, Infiltration, Botnet) alongside normal benign activity.
+2. **UNSW-NB15**: Contemporary network attack activities with hybrid synthetic and realistic behaviors.
+3. **Synthetic Event Generator** ([`ingestion/log_generator.py`](ingestion/log_generator.py)): Produces customizable, multi-vector attack events on-demand for live demonstrations and integration testing.
+
+> **Note on Training vs. Evaluation**: The pipeline **does not** train model weights on CSV rows. Pre-trained foundational LLMs reason over first-principles cyber telemetry. Benchmark datasets provide the **ground-truth labels** to scientifically evaluate accuracy, precision, and false-positive rates.
+
+---
+
+## 📈 Agent Evaluation Metrics Matrix
+
+| Agent | Core Task | Primary Evaluation Metrics | Target Performance |
+|---|---|---|---|
+| **Triage Agent** | Severity & TP/FP classification | • **Accuracy**: $\frac{TP + TN}{\text{Total}}$<br>• **Precision & Recall**<br>• **F1-Score**: $2 \times \frac{P \times R}{P + R}$<br>• **False Positive Rate (FPR)** | • F1-Score $\ge 0.90$<br>• FPR $< 5\%$ on benign noise<br>• Zero False Negatives on Critical attacks |
+| **Correlation Agent** | Incident grouping across time | • **Clustering Precision**<br>• **Correlation Recall** (no split attacks)<br>• **Compression Ratio**: $1 - \frac{\text{Incidents}}{\text{Alerts}}$ | • Compression Ratio $> 70\%$ (major fatigue reduction)<br>• Latency $< 100\text{ms}$ |
+| **MITRE Agent** | ATT&CK technique mapping | • **Top-1 & Top-3 Retrieval Accuracy**<br>• **Mean Reciprocal Rank (MRR)**<br>• **Cosine Similarity Score** | • Top-3 Accuracy $\ge 92\%$ on known attack classes |
+| **Enrichment Agent** | Threat reputation lookup | • **IOC Hit Rate**<br>• **Rate-Limit Compliance** (0 `429` errors)<br>• **RFC 1918 Filter Accuracy** | • $100\%$ RFC 1918 accuracy<br>• Zero API throttling failures |
+| **Investigation Agent** | CoT attack chain synthesis | • **Evidence Grounding Rate** (hallucination-free)<br>• **Analyst Agreement Rate** | • Zero ungrounded claims<br>• $> 85\%$ analyst alignment |
+| **Report Agent** | Executive & technical reporting | • **Schema Compliance** (valid HTML/JSON)<br>• **Completeness & Readability** | • $100\%$ valid schema generation<br>• Likert score $\ge 4.5/5.0$ |
+
+---
+
+## 🧪 Testing & Benchmarking
+
+The project maintains comprehensive test coverage across all agents, pipeline stages, and API controllers.
+
+```powershell
+# Run the complete test suite (190+ unit and integration tests)
+python -m pytest
+
+# Run with verbose output and test names
+python -m pytest -v
+
+# Run agent-specific tests
+python -m pytest tests/test_triage.py
+python -m pytest tests/test_correlation.py
+python -m pytest tests/test_mitre.py
+python -m pytest tests/test_enrichment.py
+
+# Run the pipeline orchestration latency benchmark
+python -m benchmarks.pipeline_benchmark
 ```
-
----
-
-## ⚙️ Configuration
-
-Copy `.env.example` to `.env` and fill in the required values:
-
-```env
-# ── LLM Backend ──────────────────────────────────────────────
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-GOOGLE_API_KEY=AIza...
-
-# ── Threat Intelligence APIs ─────────────────────────────────
-VIRUSTOTAL_API_KEY=...
-ABUSEIPDB_API_KEY=...
-OTX_API_KEY=...
-MISP_URL=https://your-misp-instance.local
-MISP_API_KEY=...
-
-# ── SIEM / Wazuh ─────────────────────────────────────────────
-WAZUH_API_URL=https://localhost:55000
-WAZUH_USERNAME=wazuh
-WAZUH_PASSWORD=...
-
-# ── Ticket Integration (Optional) ────────────────────────────
-JIRA_URL=https://your-org.atlassian.net
-JIRA_USERNAME=...
-JIRA_API_TOKEN=...
-
-# ── Vector Store ─────────────────────────────────────────────
-CHROMA_PERSIST_DIR=./rag/chroma_db
-```
-
----
-
-## 🤖 Agent Descriptions
-
-### 1. 🔗 Alert Correlation Agent
-Receives raw alerts from multiple security sources (SIEM, EDR, Firewall, IDS, Email, Cloud). It normalizes each alert into a common schema, deduplicates overlapping events by timestamp and source IP, and emits a single **Unified Incident Object** for downstream agents.
-
-### 2. 🌐 Threat Intelligence Agent
-Receives all IOCs (IPs, domains, file hashes, URLs) from the correlated incident and enriches them in parallel by:
-- Querying **VirusTotal** for malware reputation
-- Querying **AbuseIPDB** for IP abuse score & reports
-- Querying **AlienVault OTX** for threat pulses
-- Querying **MISP** for shared organizational threat data
-
-### 3. 🔬 Investigation Agent
-The core reasoning agent. Uses the **ReAct loop** (Reason → Act → Observe → Repeat) to:
-- Query relevant logs from Wazuh/SIEM around the incident timeframe
-- Identify the attack chain (initial access → lateral movement → exfiltration)
-- Collect and document supporting log evidence
-
-### 4. 🎯 MITRE Mapping Agent
-Takes the identified attack behaviors and classifies them against the [MITRE ATT&CK Enterprise Matrix](https://attack.mitre.org/), outputting:
-- **Tactics** (e.g., `TA0001 - Initial Access`)
-- **Techniques** (e.g., `T1566.001 - Spearphishing Attachment`)
-
-### 5. 📊 Risk Scoring Agent
-Computes a structured risk assessment:
-- **Severity Score** (Critical / High / Medium / Low) based on asset value, vulnerability, and impact
-- **Confidence Score** (0–100%) based on evidence quality and TI signal strength
-- **Priority Rank** for analyst queue ordering
-
-### 6. 🛡️ Recommendation Agent
-Retrieves relevant incident response playbooks from the RAG layer (NIST SP 800-61, SANS) and generates prioritized, actionable containment steps:
-- Block malicious IPs / domains at the firewall
-- Isolate compromised endpoints
-- Force password resets for affected accounts
-- Preserve forensic artifacts before remediation
-
-### 7. 📄 Report Generation Agent
-Synthesizes all upstream agent outputs into a structured **Incident Report** containing:
-- **Executive Summary** — non-technical overview for leadership
-- **Attack Timeline** — chronological reconstruction of the incident
-- **IOC List** — all identified Indicators of Compromise
-- **MITRE ATT&CK Mapping** — tactic/technique table
-- **Recommended Actions** — prioritized response steps
-
----
-
-## 🖥️ SOC Dashboard
-
-The interactive dashboard provides SOC analysts with a single-pane view of the investigation:
-
-| Panel | Description |
-|-------|-------------|
-| **Investigation Summary** | Agent findings, enriched IOCs, and overall verdict |
-| **Attack Timeline** | Visual chronological event chain |
-| **Risk Score** | Severity gauge, confidence meter, and priority rank |
-| **MITRE ATT&CK View** | Interactive ATT&CK matrix heatmap with highlighted TTPs |
-| **Download Report** | Export the full incident report as PDF, Markdown, or JSON |
-
-> The dashboard enforces **Human-in-the-Loop (HITL)** — no response action is executed until a SOC analyst reviews, validates, and explicitly approves it.
-
----
-
-## 🚨 Incident Response
-
-Once the analyst approves the recommended actions, the system can execute automated response via integrated APIs:
-
-| Action | Method |
-|--------|--------|
-| **Block IP / Domain** | Firewall API / EDR policy push |
-| **Isolate Endpoint** | Wazuh active response / EDR network isolation |
-| **Reset Credentials** | Active Directory / IAM API |
-| **Create Ticket** | Jira / ServiceNow API |
-| **Document Incident** | Auto-appends report to incident management system |
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature-name`
-3. Commit your changes: `git commit -m 'feat: add your feature'`
-4. Push to the branch: `git push origin feature/your-feature-name`
-5. Open a Pull Request
-
-Please ensure all new agent modules include unit tests under `tests/`.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
-
----
+This project is licensed under the **MIT License**.
 
 <div align="center">
-
-**Built as a Final Year Project** | Agentic AI × Cybersecurity
-
-_Autonomous threat detection, investigation, and response — powered by LLMs._
-
+<b>Autonomous Agentic AI SOC Analyst</b> • Final Year Project & Research Platform
 </div>
-
-> ⚠️ **Important:** Read the dataset setup section below before running any code.
-
-## Dataset Setup (Required — Not Included in Repo)
-
-The raw datasets are too large for Git and are excluded via `.gitignore`.
-Each team member must download them manually and place them in the exact
-folder structure below before running any ingestion code.
-
-### 1. CICIDS2017
-- Download: https://www.unb.ca/cic/datasets/ids-2017.html
-- Get the `MachineLearningCVE` folder (8 CSV files)
-- Place at: `data/cicids2017/MachineLearningCVE/`
-
-### 2. UNSW-NB15
-- Download: https://research.unsw.edu.au/projects/unsw-nb15-dataset
-- Get `UNSW_NB15_training-set.csv` and `UNSW_NB15_testing-set.csv`
-  (the processed/Kaggle-style version)
-- Place at: `data/unsw_nb15/`
-
-### 3. MITRE ATT&CK STIX Bundle (optional)
-- Download: https://github.com/mitre/cti → `enterprise-attack/enterprise-attack.json`
-- Place at: `data/mitre_stix/enterprise-attack.json`
-- **Note:** You only need this if you're re-running `ingestion/mitre_parser.py`
-  yourself. The parsed output (`data/mitre_stix/techniques.json`) is already
-  committed to the repo and ready to use.
-
-### Folder structure after setup
-
-```
-data/
-├── cicids2017/
-│   └── MachineLearningCVE/
-│       └── *.csv (8 files)
-├── unsw_nb15/
-│   ├── UNSW_NB15_training-set.csv
-│   └── UNSW_NB15_testing-set.csv
-└── mitre_stix/
-    ├── enterprise-attack.json   (optional, for re-parsing)
-    └── techniques.json          (already in repo)
-```

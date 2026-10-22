@@ -61,7 +61,7 @@ echo [INFO] API docs will be at http://localhost:8000/docs
 echo.
 
 REM Start FastAPI in a new terminal window
-start "SOC-Analyst Backend" cmd /k "cd /d %ROOT% && uvicorn api.main:app --reload --port 8000 --host 0.0.0.0"
+start "SOC-Analyst Backend" cmd /k "cd /d %ROOT% && python -m uvicorn api.main:app --reload --port 8000 --host 0.0.0.0"
 
 REM Small delay so the backend window opens first
 timeout /t 2 /nobreak >nul

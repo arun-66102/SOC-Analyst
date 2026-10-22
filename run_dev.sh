@@ -68,7 +68,7 @@ trap cleanup INT TERM
 # ---- Start backend -------------------------------------------------------
 echo ""
 echo "[INFO] Starting FastAPI backend on http://localhost:8000 ..."
-uvicorn api.main:app --reload --port 8000 --host 0.0.0.0 &
+python -m uvicorn api.main:app --reload --port 8000 --host 0.0.0.0 &
 BACKEND_PID=$!
 
 sleep 1   # brief pause so backend starts before frontend
